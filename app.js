@@ -1,5 +1,6 @@
 const express = require('express');
-const sql = require('./MySQL');
+const sql = require('./SQLSchema');
+const profile = require('./ProfileSchema');
 const app = express();
 const port = 3000;
 
