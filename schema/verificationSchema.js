@@ -1,3 +1,5 @@
+const config = require('../config');
+
 /**
  * Check for Speial Characters
 **/
@@ -85,8 +87,8 @@ function checkEmail (email) {
  * Check Password
 **/
 function checkPassword (password) {
-	//console.log(password.length);
-	if (!password || password.length < 8 || !testLowerAlpha(password) || !testUpperAlpha(password) || !testSpecial(password) || !testNumeric(password))
+	if (!password || password.length < config.PASSWORD_LENGTH || !testLowerAlpha(password) ||
+		!testUpperAlpha(password) || !testSpecial(password) || !testNumeric(password))
 		return (false);
 	else
 		return(true);

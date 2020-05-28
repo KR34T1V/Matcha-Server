@@ -7,6 +7,7 @@ const con = mysql.createConnection({
 	password: config.MY_SQL_PASSWORD
   });
   
+//CONNECT DB AND CREATE TABLES
 con.connect((err) => {
 	if (err) throw err;
 	console.log("MySQL Connected!");
@@ -32,7 +33,7 @@ async function createTable(table, tableColumns){
 		let query = `CREATE TABLE IF NOT EXISTS ${table}(${tableColumns})`;
 		let res = await con.query(query);
 		res.on("end", () => {
-			console.log(`Table: ${table} Created.`);
+			console.log(`Table Created: ${table}`);
 		})
 	} catch (err){
 		console.log(err);
