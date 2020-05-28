@@ -1,30 +1,55 @@
 const sql = require('./SQLSchema');
 const verify = require('./verificationSchema');
+const bcrypt = require('bcryptjs');
+let user = {
+	Username : "BOB",
+	Firstname : "Bob",
+	Lastname : "Nan",
+	Birthdate : new Date(1997,08,29).toLocaleDateString(),
+	Email : "BobNan@dispostable.com",
+	Gender : "Male",
+	SexualPreference : "Bisexual",
+	Password : "StaciesMom1!",
+	RePassword : "StaciesMom1!"
+}
+registerUser(user);
 
-async function registerUser(){
-	var user = (req.body);
+async function registerUser(user){
 	var errors = [];
+	let result;
 	try{
-		if (!user.u_name || !user.u_first || !user.u_last || !user.u_bdate || !user.u_gender ||
-			!user.u_pref || !user.u_email || !user.u_pwd || !user.u_repwd)
+		if (!user.Username || !user.Firstname || !user.Lastname || !user.Birthdate
+			|| !user.Gender || !user.SexualPreference || !user.Email || 
+			!user.Password || !user.RePassword)
 			errors.push('Form is incomplete');
-		if (!verify.checkUserName(user.u_name))
+		if (!verify.checkUserName(user.Username))
 			errors.push('Username may not contain special characters');
-		if (!verify.checkNames(user.u_first) || !verify.checkNames(user.u_last))
+		if (!verify.checkNames(user.Firstname) || !verify.checkNames(user.Lastname))
 			errors.push('Firstname & Lastname may not contain special characters');
-		if (!verify.checkBirth(user.u_bdate))
+		if (!verify.checkBirth(user.Birthdate))
 			errors.push('Selected date of birth is invalid');
-		if (!verify.checkGender(user.u_gender))
+		if (!verify.checkGender(user.Gender))
 			errors.push('Selected gender is invalid');
-		if (!verify.checkPreference(user.u_pref))
+		if (!verify.checkPreference(user.SexualPreference))
 			errors.push('Selected sexual preference is invalid');
-		if (!verify.checkEmail(user.u_email))
+		if (!verify.checkEmail(user.Email))
 			errors.push('Invalid email address');
-		if (!verify.checkPassword(user.u_pwd))
+		if (!verify.checkPassword(user.Password))
 			errors.push('Password must contain: \'uppercase\', \'lowercase\', \'numeric\', \'special\' characters');
-		if (!verify.checkRePassword(user.u_pwd, user.u_repwd))
+		if (!verify.checkRePassword(user.Password, user.RePassword))
 			errors.push('Passwords do not match');
 		//SQL stuff goes here
+		if (!errors.length) {
+			//Prepare for SQL
+			//user.Birthdate = user.Birthdate.toLocaleDateString();
+			user.VerifyKey = await bcrypt.genSalt(1);
+			user.Password = await bcrypt.hash(user.Password, 6);
+			result = await sql.newUser(user);
+			if (result)
+				return (1);
+			else
+				errors.push('Email is already in use');
+		}
 		// if (await mongo.searchUser({ 'Email' : user.u_email, DateDeleted: null }) != null)
 		// 	errors.push('Email is already in use');
 		// else if (!errors.length) {
@@ -33,11 +58,8 @@ async function registerUser(){
 		// 	await mongo.addUser(user);
 		// 	mail.verifyEmail(user.u_email, user.u_name, user.key);
 		// }
-		if (!errors.length){
-			return (res.json({ 'msg': 'Success', 'email': user.u_email }));
-		}
 		else
-			return (res.json({ 'error': errors }));
+			return (errors);
 	} catch (err){
 		console.log(err);
 		//mail error

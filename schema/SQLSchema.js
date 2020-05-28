@@ -18,20 +18,8 @@ con.connect((err) => {
 	createDatabase(config.DATABASE_NAME);
 	selectDatabase(config.DATABASE_NAME);
 	createTable(config.USERS_TABLE, config.USERS_TABLE_COLUMNS);
-	let user = {
-		Username : "BOB",
-		Firstname : "Bob",
-		Lastname : "Nan",
-		Birthdate : new Date(1997,08,29).toLocaleDateString(),
-		Email : "BobNan@dispostable.com",
-		Gender : "Male",
-		SexualPreference : "Bisexual",
-		Password : "StaciesMom"
-	}
-
-	newUser(user)
 });
-
+//STARTUP FUNCTIONS
 async function createDatabase(database){
 	try {
 		let request = `CREATE DATABASE IF NOT EXISTS ${database}`;
@@ -65,6 +53,7 @@ async function selectDatabase(database){
 	}
 }
 
+//EXPORTS
 async function newUser(user){
 	let result;
 	try{
@@ -76,19 +65,6 @@ async function newUser(user){
 			console.log(`User added -> ${user.Username}`)
 			return (result);
 		}
-	} catch (err) {
-		console.log(err);
-	}
-}
-async function insertUser(user){
-	//this has no security checks
-	try{
-		let request = `INSERT INTO ${config.USERS_TABLE} 
-		(Username, Firstname, Lastname, Birthdate, Gender, SexualPreference, Email, Password)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
-		let res = await query(request, [user.Username, user.Firstname, user.Lastname, 
-			user.Birthdate, user.Gender, user.SexualPreference, user.Email, user.Password]);
-		return (user);
 	} catch (err) {
 		console.log(err);
 	}
@@ -129,4 +105,29 @@ async function findUsername(user){
 	} catch (err){
 		console.log(err);
 	}
+}
+
+//SUBMODULES
+async function insertUser(user){
+	//this has no security checks
+	try{
+		let request = `INSERT INTO ${config.USERS_TABLE} 
+		(Username, Firstname, Lastname, Birthdate, Gender, SexualPreference, Email,
+		VerifyKey, Password) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+		console.log(user.VerifyKey);
+		let res = await query(request, [user.Username, user.Firstname, user.Lastname, 
+			user.Birthdate, user.Gender, user.SexualPreference, user.Email, user.VerifyKey, user.Password]);
+		return (user);
+	} catch (err) {
+		console.log(err);
+	}
+}
+
+
+
+module.exports = {
+	newUser,
+	findEmail,
+	findId,
+	findUsername
 }

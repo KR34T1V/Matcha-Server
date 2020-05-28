@@ -4,7 +4,7 @@ const MY_SQL_HOST ='localhost';
 const MY_SQL_USERNAME = 'kr34t1v';
 const MY_SQL_PASSWORD = 'Papenvleis1!';
 const DATABASE_NAME = 'matcha';
-const USERS_TABLE = `Users`;
+const USERS_TABLE = `${DATABASE_NAME}.Users`;
 const USERS_TABLE_COLUMNS = `
 Id INT AUTO_INCREMENT PRIMARY KEY,
 Username NVARCHAR(255) NOT NULL,

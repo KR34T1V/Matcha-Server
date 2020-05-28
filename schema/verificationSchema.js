@@ -112,7 +112,7 @@ function checkBirth (birth) {
 	if (!birth)
 		return (false);
 		
-	var regexp = new RegExp('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+	var regexp = new RegExp('^[0-9]{4}/[0-9]{2}/[0-9]{2}$');
 
 	return regexp.test(birth).valueOf();
 }
