@@ -37,6 +37,7 @@ async function createDatabase(database){
 		let request = `CREATE DATABASE IF NOT EXISTS ${database}`;
 		let res = await query(request);
 		console.log('Database: ' + database);
+		return(database);
 	} catch (err){
 		console.log(err);
 	}
@@ -47,6 +48,7 @@ async function createTable(table, tableColumns){
 		let request = `CREATE TABLE IF NOT EXISTS ${table}(${tableColumns})`;
 		let res = await query(request);
 		console.log(`Table Created: ${table}`);
+		return(table);
 	} catch (err){
 		console.log(err);
 	}
@@ -57,20 +59,22 @@ async function selectDatabase(database){
 		let request = `USE ${database}`;
 		let res = await query(request);
 		console.log(`Using: ${database}`);
+		return(database);
 	} catch (err){
 		console.log(err);
 	}
 }
 
 async function newUser(user){
+	let result;
 	try{
-		// console.log(await findEmail(user.Email));
-		if (await findEmail(user.Email)){
-			console.log(`Email already in use: ${user.Email}`);
+		if ((result = await findEmail(user.Email))){
+			console.log(`Email already in use: ${result.Email}`);
 			return null;
 		}else {
-			await insertUser(user);
+			result = await insertUser(user);
 			console.log(`User added -> ${user.Username}`)
+			return (result);
 		}
 	} catch (err) {
 		console.log(err);
@@ -84,6 +88,7 @@ async function insertUser(user){
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
 		let res = await query(request, [user.Username, user.Firstname, user.Lastname, 
 			user.Birthdate, user.Gender, user.SexualPreference, user.Email, user.Password]);
+		return (user);
 	} catch (err) {
 		console.log(err);
 	}
@@ -91,10 +96,10 @@ async function insertUser(user){
 
 async function findEmail(email){
 	try{
-		let request = `SELECT Email FROM ${config.USERS_TABLE} WHERE Email=? AND DateDeleted IS NULL`;
+		let request = `SELECT * FROM ${config.USERS_TABLE} WHERE Email=? AND DateDeleted IS NULL`;
 		let res = await query(request,[email]);
-			if (res && res[0] && res[0].Email){
-				return (res[0].Email)
+			if (res && res[0] && res[0]){
+				return (res[0]);
 			}
 			return (null);
 	} catch (err){
@@ -104,8 +109,11 @@ async function findEmail(email){
 
 async function findId(id){
 	try{
-		let request = `SELECT * FROM ${config.USERS_TABLE} WHERE Id=${id} AND DateDeleted=NULL`;
-		let res = await query(request);
+		let request = `SELECT * FROM ${config.USERS_TABLE} WHERE Id=? AND DateDeleted=NULL`;
+		let res = await query(request, id);
+		if (res && res[0])
+			return (res[0]);
+		return (null);
 	} catch (err){
 		console.log(err);
 	}
@@ -113,8 +121,11 @@ async function findId(id){
 
 async function findUsername(user){
 	try{
-		let request = `SELECT * FROM ${config.USERS_TABLE} WHERE Username=${user} AND DateDeleted=NULL`;
-		let res = await query(request);
+		let request = `SELECT * FROM ${config.USERS_TABLE} WHERE Username=? AND DateDeleted=NULL`;
+		let res = await query(request, user);
+		if (res && res[0])
+			return(res[0]);
+		return (null);
 	} catch (err){
 		console.log(err);
 	}
