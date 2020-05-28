@@ -1,5 +1,6 @@
 const mysql = require('mysql');
 const config = require('../config');
+const util = require('util');
 
 const con = mysql.createConnection({
 	host: config.MY_SQL_HOST,
@@ -7,6 +8,9 @@ const con = mysql.createConnection({
 	password: config.MY_SQL_PASSWORD
   });
   
+// node native promisify
+const query = util.promisify(con.query).bind(con);
+
 //CONNECT DB AND CREATE TABLES
 con.connect((err) => {
 	if (err) throw err;
@@ -14,15 +18,25 @@ con.connect((err) => {
 	createDatabase(config.DATABASE_NAME);
 	selectDatabase(config.DATABASE_NAME);
 	createTable(config.USERS_TABLE, config.USERS_TABLE_COLUMNS);
+	let user = {
+		Username : "BOB",
+		Firstname : "Bob",
+		Lastname : "Nan",
+		Birthdate : new Date(1997,08,29).toLocaleDateString(),
+		Email : "BobNan@dispostable.com",
+		Gender : "Male",
+		SexualPreference : "Bisexual",
+		Password : "StaciesMom"
+	}
+
+	newUser(user)
 });
 
 async function createDatabase(database){
 	try {
-		let query = `CREATE DATABASE IF NOT EXISTS ${database}`;
-		let res = await con.query(query);
-		res.on("end", () => {
-			console.log('Database: ' + database);
-		})	
+		let request = `CREATE DATABASE IF NOT EXISTS ${database}`;
+		let res = await query(request);
+		console.log('Database: ' + database);
 	} catch (err){
 		console.log(err);
 	}
@@ -30,11 +44,9 @@ async function createDatabase(database){
 
 async function createTable(table, tableColumns){
 	try{
-		let query = `CREATE TABLE IF NOT EXISTS ${table}(${tableColumns})`;
-		let res = await con.query(query);
-		res.on("end", () => {
-			console.log(`Table Created: ${table}`);
-		})
+		let request = `CREATE TABLE IF NOT EXISTS ${table}(${tableColumns})`;
+		let res = await query(request);
+		console.log(`Table Created: ${table}`);
 	} catch (err){
 		console.log(err);
 	}
@@ -42,11 +54,67 @@ async function createTable(table, tableColumns){
 
 async function selectDatabase(database){
 	try{
-		let query = `USE ${database}`;
-		let res = await con.query(query);
-		res.on("end", (msg) => {
-			console.log(`Using: ${database}`);
-		})
+		let request = `USE ${database}`;
+		let res = await query(request);
+		console.log(`Using: ${database}`);
+	} catch (err){
+		console.log(err);
+	}
+}
+
+async function newUser(user){
+	try{
+		// console.log(await findEmail(user.Email));
+		if (await findEmail(user.Email)){
+			console.log(`Email already in use: ${user.Email}`);
+			return null;
+		}else {
+			await insertUser(user);
+			console.log(`User added -> ${user.Username}`)
+		}
+	} catch (err) {
+		console.log(err);
+	}
+}
+async function insertUser(user){
+	//this has no security checks
+	try{
+		let request = `INSERT INTO ${config.USERS_TABLE} 
+		(Username, Firstname, Lastname, Birthdate, Gender, SexualPreference, Email, Password)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+		let res = await query(request, [user.Username, user.Firstname, user.Lastname, 
+			user.Birthdate, user.Gender, user.SexualPreference, user.Email, user.Password]);
+	} catch (err) {
+		console.log(err);
+	}
+}
+
+async function findEmail(email){
+	try{
+		let request = `SELECT Email FROM ${config.USERS_TABLE} WHERE Email=? AND DateDeleted IS NULL`;
+		let res = await query(request,[email]);
+			if (res && res[0] && res[0].Email){
+				return (res[0].Email)
+			}
+			return (null);
+	} catch (err){
+		console.log(err);
+	}
+}
+
+async function findId(id){
+	try{
+		let request = `SELECT * FROM ${config.USERS_TABLE} WHERE Id=${id} AND DateDeleted=NULL`;
+		let res = await query(request);
+	} catch (err){
+		console.log(err);
+	}
+}
+
+async function findUsername(user){
+	try{
+		let request = `SELECT * FROM ${config.USERS_TABLE} WHERE Username=${user} AND DateDeleted=NULL`;
+		let res = await query(request);
 	} catch (err){
 		console.log(err);
 	}
