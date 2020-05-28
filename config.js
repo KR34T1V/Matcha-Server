@@ -1,8 +1,8 @@
 
 //DATABASE CONSTANTS
 const MY_SQL_HOST ='localhost';
-const MY_SQL_USERNAME = 'matcha';
-const MY_SQL_PASSWORD = 'Papenvleis1';
+const MY_SQL_USERNAME = 'kr34t1v';
+const MY_SQL_PASSWORD = 'Papenvleis1!';
 const DATABASE_NAME = 'matcha';
 const USERS_TABLE = 'Users'
 const USERS_TABLE_COLUMNS = `

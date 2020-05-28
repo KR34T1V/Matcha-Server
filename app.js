@@ -1,6 +1,6 @@
 const express = require('express');
-const sql = require('./SQLSchema');
-const profile = require('./ProfileSchema');
+const sql = require('./schema/SQLSchema');
+const profile = require('./schema/profileSchema');
 const app = express();
 const port = 3000;
 
