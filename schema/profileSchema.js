@@ -1,6 +1,8 @@
 const sql = require('./SQLSchema');
 const verify = require('./verificationSchema');
 const bcrypt = require('bcryptjs');
+const mail = require('./emailSchema');
+
 let user = {
 	Username : "BOB",
 	Firstname : "Bob",
@@ -45,9 +47,10 @@ async function registerUser(user){
 			user.VerifyKey = await bcrypt.genSalt(1);
 			user.Password = await bcrypt.hash(user.Password, 6);
 			result = await sql.newUser(user);
-			if (result)
+			if (result){
+				mail.verifyEmail(user.Email, user.Username, user.VerifyKey);
 				return (1);
-			else
+			} else
 				errors.push('Email is already in use');
 		}
 		// if (await mongo.searchUser({ 'Email' : user.u_email, DateDeleted: null }) != null)
