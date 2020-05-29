@@ -53,14 +53,6 @@ async function registerUser(user){
 			} else
 				errors.push('Email is already in use');
 		}
-		// if (await mongo.searchUser({ 'Email' : user.u_email, DateDeleted: null }) != null)
-		// 	errors.push('Email is already in use');
-		// else if (!errors.length) {
-		// 	user.key = await bcrypt.genSalt(1);
-		// 	user.u_pwd = await bcrypt.hash(user.u_pwd, 6);
-		// 	await mongo.addUser(user);
-		// 	mail.verifyEmail(user.u_email, user.u_name, user.key);
-		// }
 		else
 			return (errors);
 	} catch (err){
