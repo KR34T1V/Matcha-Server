@@ -70,6 +70,22 @@ async function newUser(user){
 	}
 }
 
+async function updateUser(user, query, varArray){
+	try{
+		let errors = [];
+		if (user && user.Id){
+			let request = `UPDATE ${config.USERS_TABLE} SET ${query} WHERE Id=? AND DateDeleted IS NULL`;
+			varArray.push(user.Id);
+			let res = await query(request, varArray);
+			console.log(res);
+		}
+		errors.push("Invalid Input");
+		return (errors);		
+	} catch (err){
+		console.log(err);
+	}
+}
+
 async function findEmail(email){
 	try{
 		let request = `SELECT * FROM ${config.USERS_TABLE} WHERE Email=? AND DateDeleted IS NULL`;
@@ -127,6 +143,7 @@ async function insertUser(user){
 
 module.exports = {
 	newUser,
+	updateUser,
 	findEmail,
 	findId,
 	findUsername

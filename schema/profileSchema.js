@@ -14,10 +14,13 @@ let user = {
 	Password : "StaciesMom1!",
 	RePassword : "StaciesMom1!"
 }
+console.log(`here we go: ${user.Password}`);
+loginUser(user);
 registerUser(user);
 
 async function registerUser(user){
 	var errors = [];
+	var form;
 	let result;
 	try{
 		if (!user.Username || !user.Firstname || !user.Lastname || !user.Birthdate
@@ -43,13 +46,13 @@ async function registerUser(user){
 		//SQL stuff goes here
 		if (!errors.length) {
 			//Prepare for SQL
-			//user.Birthdate = user.Birthdate.toLocaleDateString();
-			user.VerifyKey = await bcrypt.genSalt(1);
-			user.Password = await bcrypt.hash(user.Password, 6);
-			result = await sql.newUser(user);
+			form = user;
+			form.VerifyKey = await bcrypt.genSalt(1);
+			form.Password = await bcrypt.hash(user.Password, 6);
+			result = await sql.newUser(form);
 			if (result){
-				mail.verifyEmail(user.Email, user.Username, user.VerifyKey);
-				return (1);
+				mail.verifyEmail(form.Email, form.Username, form.VerifyKey);
+				return (form);
 			} else
 				errors.push('Email is already in use');
 		}
@@ -63,8 +66,57 @@ async function registerUser(user){
 	}
 }
 
-async function loginUser(){
+async function loginUser(user){
+	let errors = [];
+	try {
+		if (!user || !user.Email || !user.Password)
+		return (errors.push("Fields are not valid"));
+		let data = await sql.findEmail(user.Email);
+		if (data != null){
+			if (data.Password){
+				let result = await bcrypt.compare(user.Password, data.Password);
+				if (result == true){
+					return (user);
+				} else{
+					errors.push("Incorrect Password");
+					return (errors);
+				}
+			}
+		}
+		errors.push("Unknown user");
+		return(errors);
+	} catch (err){
+		console.log(err);
+		errors = ['An Unexpected Error Occured Please Try Again Later...'];
+		return (errors);
+	}
 
+}
+
+async function resetUserPassword(user){
+		let errors = [];
+	try {
+		if (! user || !user.Id)
+			errors.push('Form Incomplete');
+		let key = await bcrypt.genSalt(1);
+		let request = `VerifyKey=?`;
+		let data = await sql.updateUser(user, request, [ key ]);
+		if (!data)
+			errors.push('Account was not found');
+		else {
+			mail.resetEmail(data.Email, data.Username, data.VerifyKey);
+		}
+		if (errors.length == 0){
+			return (data);
+		}
+		else
+			return (errors);
+	} catch (err){
+		console.log(err);
+		//mail error
+		errors = ['An Unexpected Error Occured Please Try Again Later...'];
+		return (res.json({ 'error': errors }));
+	}
 }
 
 async function deleteUser(){
