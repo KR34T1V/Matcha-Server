@@ -70,17 +70,16 @@ async function newUser(user){
 	}
 }
 
-async function updateUser(user, query, varArray){
+//kinda working
+async function updateUser(user, qry, varArray){
 	try{
-		let errors = [];
-		if (user && user.Id){
-			let request = `UPDATE ${config.USERS_TABLE} SET ${query} WHERE Id=? AND DateDeleted IS NULL`;
-			varArray.push(user.Id);
-			let res = await query(request, varArray);
-			console.log(res);
+		if (user && user.Email){
+			let request = `UPDATE ${config.USERS_TABLE} SET ${qry} WHERE Email=? AND DateDeleted IS NULL`;
+			varArray.push(user.Email);
+			await query(request, varArray);
+			return (1);
 		}
-		errors.push("Invalid Input");
-		return (errors);		
+		return (0);		
 	} catch (err){
 		console.log(err);
 	}

@@ -3,7 +3,7 @@ const verify = require('./verificationSchema');
 const bcrypt = require('bcryptjs');
 const mail = require('./emailSchema');
 
-let user = {
+const user = {
 	Username : "BOB",
 	Firstname : "Bob",
 	Lastname : "Nan",
@@ -17,6 +17,7 @@ let user = {
 console.log(`here we go: ${user.Password}`);
 loginUser(user);
 registerUser(user);
+resetUserPassword(user);
 
 async function registerUser(user){
 	var errors = [];
@@ -69,7 +70,7 @@ async function registerUser(user){
 async function loginUser(user){
 	let errors = [];
 	try {
-		if (!user || !user.Email || !user.Password)
+		if (user == null || user.Email == null || user.Password == null)
 		return (errors.push("Fields are not valid"));
 		let data = await sql.findEmail(user.Email);
 		if (data != null){
@@ -94,9 +95,9 @@ async function loginUser(user){
 }
 
 async function resetUserPassword(user){
-		let errors = [];
 	try {
-		if (! user || !user.Id)
+		let errors = [];
+		if ( user == null || user.Id == null)
 			errors.push('Form Incomplete');
 		let key = await bcrypt.genSalt(1);
 		let request = `VerifyKey=?`;
@@ -104,10 +105,11 @@ async function resetUserPassword(user){
 		if (!data)
 			errors.push('Account was not found');
 		else {
-			mail.resetEmail(data.Email, data.Username, data.VerifyKey);
+			user.VerifyKey = key;
+			mail.resetEmail(user.Email, user.Username, key);
 		}
 		if (errors.length == 0){
-			return (data);
+			return (user);
 		}
 		else
 			return (errors);
