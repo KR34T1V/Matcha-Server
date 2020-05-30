@@ -14,11 +14,15 @@ const user = {
 	Password : "StaciesMom1!",
 	RePassword : "StaciesMom1!"
 }
-loginUser(user);
+loginUser(user) // password problem here ??? wtf
+.then((res)=>console.log(res));
 registerUser(user);
 resetUserPassword(user);
-changeUserPassword(user,"1BobNanisPassword!", "1BobNanisPassword!");
+changeUserPassword(user);
+deleteUser(user) // password problem here ??? wtf
+.then((res)=>console.log(res));
 
+//returns the user on success, array of errors on failure
 async function registerUser(user){
 	var errors = [];
 	var form;
@@ -63,10 +67,11 @@ async function registerUser(user){
 		console.log(err);
 		//mail error
 		errors = ['An Unexpected Error Occured Please Try Again Later...'];
-		return (res.json({ 'error': errors }));
+		return (errors);
 	}
 }
 
+//returns the user on success, array of errors on failure
 async function loginUser(user){
 	let errors = [];
 	try {
@@ -79,7 +84,7 @@ async function loginUser(user){
 				if (result == true){
 					return (user);
 				} else{
-					errors.push("Incorrect Password");
+					errors.push("Password Incorrect");
 					return (errors);
 				}
 			}
@@ -94,6 +99,7 @@ async function loginUser(user){
 
 }
 
+//returns the modified user on success, array of errors on failure
 async function resetUserPassword(user){
 	try {
 		let errors = [];
@@ -121,17 +127,18 @@ async function resetUserPassword(user){
 	}
 }
 
-async function changeUserPassword(user, password, repassword){
+//returns the modified user on success, array of errors on failure
+async function changeUserPassword(user){
 	let errors = [];
 	try {
 		if ( user == null || user.Email == null || user.Password == null || user.RePassword == null)
 		errors.push('Form Incomplete');
-		if (!verify.checkPassword(password))
+		if (!verify.checkPassword(user.Password))
 		errors.push('Password must contain: \'uppercase\', \'lowercase\', \'numeric\', \'special\' & at least 8 characters');
-		if (!verify.checkRePassword(password, repassword))
+		if (!verify.checkRePassword(user.Password, user.Repassword))
 		errors.push('Passwords do not match');
 		if (!errors.length){
-			let hash = await bcrypt.hash(password, 6);
+			let hash = await bcrypt.hash(user.Password, 6);
 			let request = `Password=?`
 			let data = sql.updateUser(user, request, [hash])
 			if (data){
@@ -150,7 +157,34 @@ async function changeUserPassword(user, password, repassword){
 	}
 }
 
-async function deleteUser(){
-
+//Returns null on success, array of errors on failure
+async function deleteUser(user){
+	let errors = [];
+	try {
+		if ( user == null || user.Email == null || user.Password == null )
+			return('Form Incomplete');
+			let data = await sql.findEmail(user.Email);
+			if (data != null){
+				if (await bcrypt.compare(user.Password, data.Password)){
+					let request = `DateDeleted=?`
+					let res = await sql.updateUser(user, request, new Date().toLocaleDateString());
+					if (res){
+						return (null);
+					} else {
+						errors.push('An Unexpected Error Occured Please Try Again Later...');
+					}
+				} else {
+					errors.push('Password Incorrect');
+				}
+			} else {
+			errors.push('User Not Found');
+		}
+		return(errors);
+	} catch (err){
+		console.log(err);
+		//mail error
+		errors = ['An Unexpected Error Occured Please Try Again Later...'];
+		return (errors);
+	}
 }
 
