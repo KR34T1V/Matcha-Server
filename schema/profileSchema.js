@@ -14,10 +14,10 @@ const user = {
 	Password : "StaciesMom1!",
 	RePassword : "StaciesMom1!"
 }
-console.log(`here we go: ${user.Password}`);
 loginUser(user);
 registerUser(user);
 resetUserPassword(user);
+changeUserPassword(user,"1BobNanisPassword!", "1BobNanisPassword!");
 
 async function registerUser(user){
 	var errors = [];
@@ -118,6 +118,35 @@ async function resetUserPassword(user){
 		//mail error
 		errors = ['An Unexpected Error Occured Please Try Again Later...'];
 		return (res.json({ 'error': errors }));
+	}
+}
+
+async function changeUserPassword(user, password, repassword){
+	let errors = [];
+	try {
+		if ( user == null || user.Email == null || user.Password == null || user.RePassword == null)
+		errors.push('Form Incomplete');
+		if (!verify.checkPassword(password))
+		errors.push('Password must contain: \'uppercase\', \'lowercase\', \'numeric\', \'special\' & at least 8 characters');
+		if (!verify.checkRePassword(password, repassword))
+		errors.push('Passwords do not match');
+		if (!errors.length){
+			let hash = await bcrypt.hash(password, 6);
+			let request = `Password=?`
+			let data = sql.updateUser(user, request, [hash])
+			if (data){
+				user.Password = hash;
+				return(user);
+			} else {
+				errors.push('An unexpected error occured please try again later...');
+			}
+		}
+		return (errors);
+	} catch (err){
+		console.log(err);
+		//mail error
+		errors = ['An Unexpected Error Occured Please Try Again Later...'];
+		return (errors);
 	}
 }
 
