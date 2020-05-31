@@ -15,23 +15,21 @@ const user = {
 	RePassword : "StaciesMom1!"
 }
 loginUser(user) // password problem here ??? wtf
-.then((res)=>console.log(res));
-registerUser(user);
-resetUserPassword(user);
-changeUserPassword(user);
-deleteUser(user) // password problem here ??? wtf
+.then((res)=>console.log(res))
+.then(resetUserPassword(user))
+.then(changeUserPassword(user))
+.then(deleteUser(user)) // password problem here ??? wtf
 .then((res)=>console.log(res));
 
 //returns the user on success, array of errors on failure
 async function registerUser(user){
 	var errors = [];
-	var form;
 	let result;
 	try{
-		if (!user.Username || !user.Firstname || !user.Lastname || !user.Birthdate
-			|| !user.Gender || !user.SexualPreference || !user.Email || 
-			!user.Password || !user.RePassword)
-			errors.push('Form is incomplete');
+		if (user.Username == null || user.Firstname == null || user.Lastname == null ||
+			user.Birthdate == null || user.Gender == null || user.SexualPreference == null ||
+			user.Email == null || user.Password == null || user.RePassword == null)
+			errors.push(['Fields are not valid']);
 		if (!verify.checkUserName(user.Username))
 			errors.push('Username may not contain special characters');
 		if (!verify.checkNames(user.Firstname) || !verify.checkNames(user.Lastname))
@@ -51,13 +49,12 @@ async function registerUser(user){
 		//SQL stuff goes here
 		if (!errors.length) {
 			//Prepare for SQL
-			form = user;
-			form.VerifyKey = await bcrypt.genSalt(1);
-			form.Password = await bcrypt.hash(user.Password, 6);
-			result = await sql.newUser(form);
+			user.VerifyKey = await bcrypt.genSalt(1);
+			user.Password = await bcrypt.hash(user.Password, 6);
+			result = await sql.newUser(user);
 			if (result){
-				mail.verifyEmail(form.Email, form.Username, form.VerifyKey);
-				return (form);
+				mail.verifyEmail(user.Email, user.Username, user.VerifyKey);
+				return (user);
 			} else
 				errors.push('Email is already in use');
 		}
@@ -75,9 +72,9 @@ async function registerUser(user){
 async function loginUser(user){
 	let errors = [];
 	try {
-		if (user == null || user.Email == null || user.Password == null)
-		return (errors.push("Fields are not valid"));
-		let data = await sql.findEmail(user.Email);
+		if (user == null || user.Id == null || user.Password == null)
+			return (['Fields are not valid']);
+		let data = await sql.findId(user.Id);
 		if (data != null){
 			if (data.Password){
 				let result = await bcrypt.compare(user.Password, data.Password);
@@ -100,11 +97,24 @@ async function loginUser(user){
 }
 
 //returns the modified user on success, array of errors on failure
+async function updateUserProfile(user){
+	errors = [];
+	let request;
+	try{
+		if (user == null || user.Id == null)
+			return(['Fields are not valid']);
+	} catch(err){
+		console.log(err);
+		return (['An Unexpected Error Occured Please Try Again Later...'])
+	}
+}
+
+//returns the modified user on success, array of errors on failure
 async function resetUserPassword(user){
 	try {
 		let errors = [];
 		if ( user == null || user.Id == null)
-			errors.push('Form Incomplete');
+			return(['Fields are not valid']);
 		let key = await bcrypt.genSalt(1);
 		let request = `VerifyKey=?`;
 		let data = await sql.updateUser(user, request, [ key ]);
@@ -123,7 +133,7 @@ async function resetUserPassword(user){
 		console.log(err);
 		//mail error
 		errors = ['An Unexpected Error Occured Please Try Again Later...'];
-		return (res.json({ 'error': errors }));
+		return (errors);
 	}
 }
 
@@ -131,12 +141,12 @@ async function resetUserPassword(user){
 async function changeUserPassword(user){
 	let errors = [];
 	try {
-		if ( user == null || user.Email == null || user.Password == null || user.RePassword == null)
-		errors.push('Form Incomplete');
+		if ( user == null || user.Id == null || user.Password == null || user.RePassword == null)
+			return(['Fields are not valid']);
 		if (!verify.checkPassword(user.Password))
-		errors.push('Password must contain: \'uppercase\', \'lowercase\', \'numeric\', \'special\' & at least 8 characters');
+			errors.push('Password must contain: \'uppercase\', \'lowercase\', \'numeric\', \'special\' & at least 8 characters');
 		if (!verify.checkRePassword(user.Password, user.Repassword))
-		errors.push('Passwords do not match');
+			errors.push('Passwords do not match');
 		if (!errors.length){
 			let hash = await bcrypt.hash(user.Password, 6);
 			let request = `Password=?`
@@ -161,9 +171,9 @@ async function changeUserPassword(user){
 async function deleteUser(user){
 	let errors = [];
 	try {
-		if ( user == null || user.Email == null || user.Password == null )
-			return('Form Incomplete');
-			let data = await sql.findEmail(user.Email);
+		if ( user == null || user.Id == null || user.Password == null )
+			return(['Fields are not valid']);
+			let data = await sql.findId(user.Id);
 			if (data != null){
 				if (await bcrypt.compare(user.Password, data.Password)){
 					let request = `DateDeleted=?`
@@ -187,4 +197,3 @@ async function deleteUser(user){
 		return (errors);
 	}
 }
-
