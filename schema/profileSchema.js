@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const mail = require('./emailSchema');
 
 const user = {
+	Id : 42,
 	Username : "BOB",
 	Firstname : "Bob",
 	Lastname : "Nan",
@@ -19,7 +20,8 @@ loginUser(user) // password problem here ??? wtf
 .then(resetUserPassword(user))
 .then(changeUserPassword(user))
 .then(deleteUser(user)) // password problem here ??? wtf
-.then((res)=>console.log(res));
+.then((res)=>console.log(res))
+.then(updateUserProfile(user));
 
 //returns the user on success, array of errors on failure
 async function registerUser(user){
@@ -72,9 +74,11 @@ async function registerUser(user){
 async function loginUser(user){
 	let errors = [];
 	try {
-		if (user == null || user.Id == null || user.Password == null)
+		if (user == null || user.Email == null || user.Password == null)
 			return (['Fields are not valid']);
-		let data = await sql.findId(user.Id);
+		let data = await sql.findEmail(user.Email);
+		if (data == null)
+			data = await sql.findEmail(user.NewEmail);
 		if (data != null){
 			if (data.Password){
 				let result = await bcrypt.compare(user.Password, data.Password);
@@ -98,11 +102,76 @@ async function loginUser(user){
 
 //returns the modified user on success, array of errors on failure
 async function updateUserProfile(user){
-	errors = [];
+	let errors = [];
+	let build = [];
+	let form = [];
 	let request;
 	try{
 		if (user == null || user.Id == null)
 			return(['Fields are not valid']);
+			let data = await sql.findId(user.Id);
+			if (data == null)
+				return (['Invalid User']);
+			if (user.Username != null && verify.checkUserName(user.Username) &&
+			 user.Usermame != data.Username){
+				build.push('Username=?');
+				form.push(user.Username);
+			}
+			if (user.Firstname != null && verify.checkNames(user.Firstname) &&
+			user.Firstname != data.Firstname){
+				build.push('Firstname=?');
+				form.push(user.Firstname);
+			}
+			if (user.Lastname != null && verify.checkNames(user.Lastname) &&
+			user.Lastname != data.Lastname){
+				build.push('Lastname=?');
+				form.push(user.Lastname);
+			}
+			if (user.Birthdate != null && verify.checkEmail(user.Birthdate) &&
+			user.Birthdate != data.Birthdate){
+				build.push('Birthdate');
+				form.push(user.Birthdate);
+			}
+			if (user.Gender != null && verify.checkGender(user.Gender) &&
+			user.Gender != data.Gender){
+				build.push('Gender=?');
+				form.push(user.Gender);
+			}
+			if (user.SexualPreference != null && verify.checkPreference(user.SexualPreference) &&
+			user.SexualPreference != data.SexualPreference){
+				build.push('SexualPreference=?')
+				form.push(user.SexualPreference);
+			}
+
+			//EMAIL
+			if (user.NewEmail != null && verify.checkEmail(user.NewEmail) &&
+			user.NewEmail != data.Email){
+				//Create new key
+				user.VerifyKey = await bcrypt.genSalt(1);
+				mail.verifyEmail(user.NewEmail, user.Username, user.VerifyKey);
+				//Unverify
+				//Set New Email
+				build.push('NewEmail=?');
+				form.push(user.newEmail);
+				build.push('DateVerified=?');
+				form.push(null);
+				build.push('VerifyKey=?');
+				form.push(user.VerifyKey);
+			}
+
+			//PASSWORD
+			console.log(user.Password);
+			if (! await bcrypt.compare(user.Password, data.Password) &&
+			verify.checkPassword(user.Password) &&
+			verify.checkRePassword(user.Password, user.RePassword)){
+				user.Password = await bcrypt.hash(user.Password, 6);
+				build.push('Password=?');
+				form.push(user.Password);
+			}
+
+			request = await sql.buildQuery(build);
+			if (await sql.updateUser(user, request, form))
+				return user;
 	} catch(err){
 		console.log(err);
 		return (['An Unexpected Error Occured Please Try Again Later...'])

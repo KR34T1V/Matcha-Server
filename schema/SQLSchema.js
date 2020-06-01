@@ -19,6 +19,7 @@ con.connect((err) => {
 	selectDatabase(config.DATABASE_NAME);
 	createTable(config.USERS_TABLE, config.USERS_TABLE_COLUMNS);
 });
+
 //STARTUP FUNCTIONS
 async function createDatabase(database){
 	try {
@@ -85,10 +86,10 @@ async function updateUser(user, qry, varArray){
 	}
 }
 
-async function findEmail(email){
+async function findEmail(email, newEmail){
 	try{
-		let request = `SELECT * FROM ${config.USERS_TABLE} WHERE Email=? AND DateDeleted IS NULL`;
-		let res = await query(request,[email]);
+		let request = `SELECT * FROM ${config.USERS_TABLE} WHERE (Email=? OR NewEmail=?) AND DateDeleted IS NULL`;
+		let res = await query(request,[email, newEmail]);
 			if (res && res[0] && res[0]){
 				return (res[0]);
 			}
@@ -122,6 +123,22 @@ async function findUsername(user){
 	}
 }
 
+async function buildQuery(queryArray){
+	let request = null;
+
+	if (queryArray == null)
+		return(null);
+	queryArray.forEach((elem, i)=>{
+		if (i > 0)
+			request = request + ', ';
+		if (request == null)
+			request = elem;
+		else
+			request = request + elem;
+	})
+	return(request);
+}
+
 //SUBMODULES
 async function insertUser(user){
 	//this has no security checks
@@ -145,5 +162,6 @@ module.exports = {
 	updateUser,
 	findEmail,
 	findId,
-	findUsername
+	findUsername,
+	buildQuery
 }
