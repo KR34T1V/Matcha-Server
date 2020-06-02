@@ -8,12 +8,8 @@ function verifyEmail(email, username, key){
 	//Text************************************************************************************
 	let bodyText = `
 	Dear ${username},
-	Please use the following code to verify your Matcha account:
+	Please use the following link to verify your Matcha account:
 	
-	${key} 
-
-	or use this link:
-
 	http://localhost:3000/users/verify?email=${email}&key=${key}
 
 	Regards,
@@ -22,11 +18,7 @@ function verifyEmail(email, username, key){
 	//HTML************************************************************************************
 	let bodyHtml = `
 	Dear <strong>${username}<strong>,
-	<p>Please use the following code to verify your Matcha account:</p><br/>
-	
-	<h4>${key}</h4> 
-
-	<p>or use this link:</p>
+	<p>Please use the following link to verify your Matcha account:</p><br/>
 
 	<h4><a href="http://localhost:3000/users/verify?email=${email}&key=${key}">Click Me..</a></h4>
 
