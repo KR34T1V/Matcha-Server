@@ -59,7 +59,6 @@ async function newUser(user){
 	let result;
 	try{
 		if ((result = await findEmail(user.Email))){
-			console.log(`Email already in use: ${result.Email}`);
 			return null;
 		}else {
 			result = await insertUser(user);

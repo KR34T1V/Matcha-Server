@@ -3,30 +3,68 @@ const verify = require('./verificationSchema');
 const bcrypt = require('bcryptjs');
 const mail = require('./emailSchema');
 
-const user = {
-	Id : 42,
+const user1 = {
+	Id : 43,
 	Username : "BOB",
 	Firstname : "Bob",
 	Lastname : "Nan",
 	Birthdate : new Date(1997,08,29).toLocaleDateString(),
-	Email : "BobNan@dispostable.com",
+	Email : "Boban@dispostable.com",
 	Gender : "Male",
 	SexualPreference : "Bisexual",
 	Password : "StaciesMom1!",
 	RePassword : "StaciesMom1!"
 }
-loginUser(user) // password problem here ??? wtf
-.then((res)=>console.log(res))
-.then(resetUserPassword(user))
-.then(changeUserPassword(user))
-.then(deleteUser(user)) // password problem here ??? wtf
-.then((res)=>console.log(res))
-.then(updateUserProfile(user));
+
+const user2 = {
+	Id : 44,
+	Username : "bobby",
+	Firstname : "user",
+	Lastname : "user",
+	Birthdate : new Date(1997,08,29).toLocaleDateString(),
+	Email : "Bobnan@dispostable.com",
+	Gender : "Male",
+	SexualPreference : "Bisexual",
+	Password : "StaciesMom1!",
+	RePassword : "StaciesMom1!"
+}
+//test register
+registerUser(user1)
+// .then(res => console.log(res));
+registerUser(user2)
+// .then(res => console.log(res));
+//test login
+user2.Password = "ILikeApples123!";
+loginUser(user2)
+.then(val => {
+	console.log(val);
+	if (val != null && val.Id != null){
+		console.log("login");
+		resetUserPassword(val)
+		.then(val=>{
+		console.log(val);
+			if (val != null && val.Id){
+				console.log("password reset");
+				changeUserPassword(val)
+				.then(val=>{
+					console.log(val);
+					if (val != null && val.Id != null)
+						console.log("password changed");
+					
+				})
+			}
+		})
+	}
+})
+loginUser(user2)
+
+
 
 //returns the user on success, array of errors on failure
 async function registerUser(user){
 	var errors = [];
 	let result;
+	let form = {};
 	try{
 		if (user.Username == null || user.Firstname == null || user.Lastname == null ||
 			user.Birthdate == null || user.Gender == null || user.SexualPreference == null ||
@@ -51,17 +89,24 @@ async function registerUser(user){
 		//SQL stuff goes here
 		if (!errors.length) {
 			//Prepare for SQL
-			user.VerifyKey = await bcrypt.genSalt(1);
-			user.Password = await bcrypt.hash(user.Password, 6);
-			result = await sql.newUser(user);
+			form.Username = user.Username;
+			form.Firstname = user.Firstname;
+			form.Lastname = user.Lastname;
+			form.Birthdate = user.Birthdate;
+			form.Gender = user.Gender;
+			form.SexualPreference = user.SexualPreference;
+			form.Email = user.Email
+			form.Password = await bcrypt.hash(user.Password, 6);
+			form.VerifyKey = await bcrypt.genSalt(1);
+
+			result = await sql.newUser(form);
 			if (result){
 				mail.verifyEmail(user.Email, user.Username, user.VerifyKey);
-				return (user);
+				return (form);
 			} else
 				errors.push('Email is already in use');
 		}
-		else
-			return (errors);
+		return (errors);
 	} catch (err){
 		console.log(err);
 		//mail error
@@ -83,7 +128,7 @@ async function loginUser(user){
 			if (data.Password){
 				let result = await bcrypt.compare(user.Password, data.Password);
 				if (result == true){
-					return (user);
+					return (data);
 				} else{
 					errors.push("Password Incorrect");
 					return (errors);
@@ -129,7 +174,7 @@ async function updateUserProfile(user){
 			}
 			if (user.Birthdate != null && verify.checkEmail(user.Birthdate) &&
 			user.Birthdate != data.Birthdate){
-				build.push('Birthdate');
+				build.push('Birthdate=?');
 				form.push(user.Birthdate);
 			}
 			if (user.Gender != null && verify.checkGender(user.Gender) &&
@@ -180,6 +225,8 @@ async function updateUserProfile(user){
 
 //returns the modified user on success, array of errors on failure
 async function resetUserPassword(user){
+	
+
 	try {
 		let errors = [];
 		if ( user == null || user.Id == null)
@@ -208,18 +255,31 @@ async function resetUserPassword(user){
 
 //returns the modified user on success, array of errors on failure
 async function changeUserPassword(user){
+	//REMOVE THESE DEV VALUES
+	user.Password = "ILikeApples123!";
+	user.RePassword = "ILikeApples123!";
+	//REMOVE THESE DEV VALUES
+
 	let errors = [];
 	try {
 		if ( user == null || user.Id == null || user.Password == null || user.RePassword == null)
-			return(['Fields are not valid']);
+			return(['Fields are not valid']);							
 		if (!verify.checkPassword(user.Password))
 			errors.push('Password must contain: \'uppercase\', \'lowercase\', \'numeric\', \'special\' & at least 8 characters');
-		if (!verify.checkRePassword(user.Password, user.Repassword))
+		if (!verify.checkRePassword(user.Password, user.RePassword))
 			errors.push('Passwords do not match');
-		if (!errors.length){
+		//check verification key
+		let data  = await sql.findId(user.Id);
+		if (data != null)
+			if (data.VerifyKey != user.VerifyKey)
+				errors.push("Key mismatch");
+		else
+			errors.push("Unknown User");
+		//set password
+		if (errors.length == 0){
 			let hash = await bcrypt.hash(user.Password, 6);
-			let request = `Password=?`
-			let data = sql.updateUser(user, request, [hash])
+			let request = `Password=?, VerifyKey=?`
+			data = sql.updateUser(user, request, [hash, null])
 			if (data){
 				user.Password = hash;
 				return(user);
@@ -264,5 +324,26 @@ async function deleteUser(user){
 		//mail error
 		errors = ['An Unexpected Error Occured Please Try Again Later...'];
 		return (errors);
+	}
+}
+
+async function likeUser(user, profileId){
+	if (user == null || user.Id == null || profileId == null)
+		return (['Fields are not valid']);
+	let data1 = await sql.findId(user.Id);
+	let data2 = await sql.findId(profileId);
+
+	if (data1 != null && data1.LikedBy != null &&
+	data2 != null && data2.Liked != null){
+		//Unlike if already liked
+		if (data1.Liked.find(profileId))
+			console.log(data1.Liked.find(profileId));
+		if (data2.LikedBy.find(user.Id))
+			console.log(data2.LikedBy.find(user.Id));
+		//Like
+		let request = `Liked=?`
+		data1.Liked = data1.Liked.some((value) => {return(value != data2.Id)});
+		console.log(data1.Liked);
+		data1 = await sql.updateUser(data1, request, [data1.Liked]);
 	}
 }
