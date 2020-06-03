@@ -13,7 +13,7 @@ const user1 = {
 	Gender : "Male",
 	SexualPreference : "Bisexual",
 	Password : "StaciesMom1!",
-	RePassword : "StaciesMom1!"
+	RePassword : "StaciesMom1!",
 }
 
 const user2 = {
@@ -29,44 +29,8 @@ const user2 = {
 	RePassword : "StaciesMom1!"
 }
 
-
-
-//REMOVE THESE DEV VALUES
-
-//test register
-registerUser(user1)
-// .then(res => console.log(res));
-registerUser(user2)
-// .then(res => console.log(res));
-//test login
-user2.Password = "ILikeApples123!";
-loginUser(user2)
-.then(val => {
-	console.log(val);
-	if (val != null && val.Id != null){
-		console.log("login");
-		resetUserPassword(val)
-		.then(val=>{
-		console.log(val);
-			if (val != null && val.Id){
-				console.log("password reset");
-				changeUserPassword(val)
-				.then(val=>{
-					console.log(val);
-					if (val != null && val.Id != null)
-						console.log("password changed");
-					
-				})
-			}
-		})
-	}
-})
-loginUser(user2)
-
-//REMOVE THESE DEV VALUES
-
-
-
+likeUser(user1)
+.then(val => console.log(val));
 
 //returns the user on success, array of errors on failure
 async function registerUser(user){
@@ -364,23 +328,52 @@ async function deleteUser(user){
 	}
 }
 
-async function likeUser(user, profileId){
-	if (user == null || user.Id == null || profileId == null)
-		return (['Fields are not valid']);
+async function likeUser(user){
+	user.LikeId = 44;
+	if (user == null || user.Id == null || user.LikeId == null)
+	return (['Fields are not valid']);
+	console.log('Id = ' + user.Id);
+	console.log('LikeId = ' + user.LikeId);
 	let data1 = await sql.findId(user.Id);
-	let data2 = await sql.findId(profileId);
+	let data2 = await sql.findId(user.LikeId);
+	//check if already liked
+		//unlike if already liked
+	//like
+	console.log("wtff");
+	console.log(data1);
+	console.log(data2);
+	console.log("wtff");
 
-	if (data1 != null && data1.LikedBy != null &&
-	data2 != null && data2.Liked != null){
-		//Unlike if already liked
-		if (data1.Liked.find(profileId))
-			console.log(data1.Liked.find(profileId));
-		if (data2.LikedBy.find(user.Id))
-			console.log(data2.LikedBy.find(user.Id));
-		//Like
-		let request = `Liked=?`
-		data1.Liked = data1.Liked.some((value) => {return(value != data2.Id)});
-		console.log(data1.Liked);
-		data1 = await sql.updateUser(data1, request, [data1.Liked]);
+
+	if (data1 != null &&  data2 != null){
+
+		if (data1.LikedBy != null && data2.Liked != null){
+			//Unlike if already liked
+			if (data1.Liked.find(user.LikeId))
+				console.log(data1.Liked.find(profileId));
+			if (data2.LikedBy.find(user.Id))
+				console.log(data2.LikedBy.find(user.Id));
+			console.log("wtff");
+			
+		} else{
+			//Like
+			let request = `Liked=?`;
+			data1.Liked = [data2.Id];
+			console.log("wtff");
+
+			// data1.Liked = data1.Liked.some((value) => {return(value != data2.Id)});
+			data1 = await sql.updateUser(data1, request, data1.Liked);
+		}
 	}
+}
+
+
+module.exports = {
+	likeUser,
+	deleteUser,
+	changeUserPassword,
+	resetUserPassword,
+	updateUserProfile,
+	loginUser,
+	registerUser
 }

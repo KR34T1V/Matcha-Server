@@ -12,12 +12,12 @@ const con = mysql.createConnection({
 const query = util.promisify(con.query).bind(con);
 
 //CONNECT DB AND CREATE TABLES
-con.connect((err) => {
+con.connect(async (err) => {
 	if (err) throw err;
+	await createDatabase(config.DATABASE_NAME);
+	await selectDatabase(config.DATABASE_NAME);
+	await createTable(config.USERS_TABLE, config.USERS_TABLE_COLUMNS);
 	console.log("MySQL Connected!");
-	createDatabase(config.DATABASE_NAME);
-	selectDatabase(config.DATABASE_NAME);
-	createTable(config.USERS_TABLE, config.USERS_TABLE_COLUMNS);
 });
 
 //STARTUP FUNCTIONS
@@ -100,7 +100,7 @@ async function findEmail(email, newEmail){
 
 async function findId(id){
 	try{
-		let request = `SELECT * FROM ${config.USERS_TABLE} WHERE Id=? AND DateDeleted=NULL`;
+		let request = `SELECT * FROM ${config.USERS_TABLE} WHERE Id=? AND DateDeleted IS NULL`;
 		let res = await query(request, id);
 		if (res && res[0])
 			return (res[0]);
@@ -112,7 +112,7 @@ async function findId(id){
 
 async function findUsername(user){
 	try{
-		let request = `SELECT * FROM ${config.USERS_TABLE} WHERE Username=? AND DateDeleted=NULL`;
+		let request = `SELECT * FROM ${config.USERS_TABLE} WHERE Username=? AND DateDeleted IS NULL`;
 		let res = await query(request, user);
 		if (res && res[0])
 			return(res[0]);
