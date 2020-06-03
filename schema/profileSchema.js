@@ -28,6 +28,11 @@ const user2 = {
 	Password : "StaciesMom1!",
 	RePassword : "StaciesMom1!"
 }
+
+
+
+//REMOVE THESE DEV VALUES
+
 //test register
 registerUser(user1)
 // .then(res => console.log(res));
@@ -57,6 +62,9 @@ loginUser(user2)
 	}
 })
 loginUser(user2)
+
+//REMOVE THESE DEV VALUES
+
 
 
 
@@ -157,66 +165,95 @@ async function updateUserProfile(user){
 			let data = await sql.findId(user.Id);
 			if (data == null)
 				return (['Invalid User']);
-			if (user.Username != null && verify.checkUserName(user.Username) &&
-			 user.Usermame != data.Username){
-				build.push('Username=?');
-				form.push(user.Username);
+			if (user.Username != null && user.Usermame != data.Username){
+				if (!verify.checkUserName(user.Username))
+					errors.push('Username may not contain special characters');
+				else {
+					build.push('Username=?');
+					form.push(user.Username);
+				}
 			}
-			if (user.Firstname != null && verify.checkNames(user.Firstname) &&
-			user.Firstname != data.Firstname){
-				build.push('Firstname=?');
-				form.push(user.Firstname);
+			if (user.Firstname != null && user.Firstname != data.Firstname){
+				if (!verify.checkNames(user.Firstname))
+					errors.push('Firstname may not contain special characters');
+				else {
+					build.push('Firstname=?');
+					form.push(user.Firstname);
+				}
 			}
-			if (user.Lastname != null && verify.checkNames(user.Lastname) &&
-			user.Lastname != data.Lastname){
-				build.push('Lastname=?');
-				form.push(user.Lastname);
+			if (user.Lastname != null && user.Lastname != data.Lastname){
+				if (!verify.checkNames(user.Lastname))
+					errors.push('Lastname may not contain special characters');
+				else {
+					build.push('Lastname=?');
+					form.push(user.Lastname);
+				}
 			}
-			if (user.Birthdate != null && verify.checkEmail(user.Birthdate) &&
-			user.Birthdate != data.Birthdate){
-				build.push('Birthdate=?');
-				form.push(user.Birthdate);
+			if (user.Birthdate != null && user.Birthdate != data.Birthdate){
+				if (!verify.checkBirth(user.Birthdate))
+					errors.push('Selected date of birth is invalid');
+				else {
+					build.push('Birthdate=?');
+					form.push(user.Birthdate);
+				}
 			}
-			if (user.Gender != null && verify.checkGender(user.Gender) &&
-			user.Gender != data.Gender){
-				build.push('Gender=?');
-				form.push(user.Gender);
+			if (user.Gender != null && user.Gender != data.Gender){
+				if (!verify.checkGender(user.Gender))
+					errors.push('Selected gender is invalid');
+				else {
+					build.push('Gender=?');
+					form.push(user.Gender);
+				}
 			}
-			if (user.SexualPreference != null && verify.checkPreference(user.SexualPreference) &&
-			user.SexualPreference != data.SexualPreference){
-				build.push('SexualPreference=?')
-				form.push(user.SexualPreference);
+			if (user.SexualPreference != null && user.SexualPreference != data.SexualPreference){
+				if (!verify.checkPreference(user.SexualPreference))
+					errors.push('Selected sexual preference is invalid');
+				else {	
+					build.push('SexualPreference=?')
+					form.push(user.SexualPreference);
+				}
 			}
 
 			//EMAIL
-			if (user.NewEmail != null && verify.checkEmail(user.NewEmail) &&
-			user.NewEmail != data.Email){
-				//Create new key
-				user.VerifyKey = await bcrypt.genSalt(1);
-				mail.verifyEmail(user.NewEmail, user.Username, user.VerifyKey);
-				//Unverify
-				//Set New Email
-				build.push('NewEmail=?');
-				form.push(user.newEmail);
-				build.push('DateVerified=?');
-				form.push(null);
-				build.push('VerifyKey=?');
-				form.push(user.VerifyKey);
+			if (user.NewEmail != null && user.NewEmail != data.Email){
+				if (!verify.checkPassword(user.Password))
+					errors.push('Password must contain: \'uppercase\', \'lowercase\', \'numeric\', \'special\' characters');
+				else {
+					//Create new key
+					user.VerifyKey = await bcrypt.genSalt(1);
+					mail.verifyEmail(user.NewEmail, user.Username, user.VerifyKey);
+					//Unverify
+					//Set New Email
+					build.push('NewEmail=?');
+					form.push(user.newEmail);
+					build.push('DateVerified=?');
+					form.push(null);
+					build.push('VerifyKey=?');
+					form.push(user.VerifyKey);
+				}
 			}
 
 			//PASSWORD
 			console.log(user.Password);
-			if (! await bcrypt.compare(user.Password, data.Password) &&
-			verify.checkPassword(user.Password) &&
-			verify.checkRePassword(user.Password, user.RePassword)){
-				user.Password = await bcrypt.hash(user.Password, 6);
-				build.push('Password=?');
-				form.push(user.Password);
+			if (! await bcrypt.compare(user.Password, data.Password)){
+				if (!verify.checkPassword(user.Password)){
+					errors.push('Password must contain: \'uppercase\', \'lowercase\', \'numeric\', \'special\' characters');
+					if (!verify.checkRePassword(user.Password, user.RePassword))
+						errors.push('Passwords do not match');
+					else {
+						user.Password = await bcrypt.hash(user.Password, 6);
+						build.push('Password=?');
+						form.push(user.Password);
+					}
+				}
 			}
-
-			request = await sql.buildQuery(build);
-			if (await sql.updateUser(user, request, form))
-				return user;
+			if (errors.length == 0){
+				request = await sql.buildQuery(build);
+				if (await sql.updateUser(user, request, form))
+					return user;
+				errors.push('An Unexpected Error Occured Please Try Again Later...');
+			}
+			return(errors);
 	} catch(err){
 		console.log(err);
 		return (['An Unexpected Error Occured Please Try Again Later...'])
