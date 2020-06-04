@@ -29,7 +29,7 @@ const user2 = {
 	Password : "StaciesMom1!",
 	RePassword : "StaciesMom1!"
 }
-gen.generateUsers(1);
+gen.generateUsers(5);
 
 //returns the user on success, array of errors on failure
 async function registerUser(user){

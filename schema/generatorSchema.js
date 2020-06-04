@@ -5,8 +5,8 @@ async function generateUsers(amount){
 	let count = 0;
 	let date;
 	let request;
-	let user = []
 	while (count++ < amount){
+		let user = []
 		//username	
 		user.push (await generateUsername());
 		//firstname
@@ -26,13 +26,13 @@ async function generateUsers(amount){
 		//biography
 		user.push (await generateBiography());
 		//interests
-		//user.push (await gererateInterests(5));
+		// user.push (await gererateInterests(5));
 		//location		
 		//user.push (await generateLocation());
 		//dateverified
-		date = await new Date().toLocaleDateString();
-		user.push (date)
+		user.push (await new Date().toLocaleDateString());
 		request = `Username, Firstname, Lastname, Birthdate, Gender, SexualPreference, Email, Password, Biography, DateVerified`;
+
 		await sql.insert(request, user);
 	}
 }

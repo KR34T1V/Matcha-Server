@@ -94,7 +94,7 @@ async function insert(qry, varArray){
 			})
 			values = await buildQuery(values);
 			let request = `INSERT INTO ${config.USERS_TABLE} (${qry}) VALUES (${values})`;
-			console.log(request);
+			// console.log(request);
 			console.log(varArray);
 			await query(request, varArray);
 			return (1);
