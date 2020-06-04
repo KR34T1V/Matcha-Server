@@ -2,6 +2,7 @@ const sql = require('./SQLSchema');
 const verify = require('./verificationSchema');
 const bcrypt = require('bcryptjs');
 const mail = require('./emailSchema');
+const gen = require('./generatorSchema');
 
 const user1 = {
 	Id : 43,
@@ -28,9 +29,7 @@ const user2 = {
 	Password : "StaciesMom1!",
 	RePassword : "StaciesMom1!"
 }
-
-likeUser(user1)
-.then(val => console.log(val));
+gen.generateUsers(1);
 
 //returns the user on success, array of errors on failure
 async function registerUser(user){
@@ -367,7 +366,9 @@ async function likeUser(user){
 	}
 }
 
-
+async function populateDatabase(){
+	
+}
 module.exports = {
 	likeUser,
 	deleteUser,

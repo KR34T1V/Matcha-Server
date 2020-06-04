@@ -85,6 +85,26 @@ async function updateUser(user, qry, varArray){
 	}
 }
 
+async function insert(qry, varArray){
+	let values = [];
+	try{
+		if (qry != null, varArray != null){
+			varArray.forEach(()=>{
+				values.push('?');
+			})
+			values = await buildQuery(values);
+			let request = `INSERT INTO ${config.USERS_TABLE} (${qry}) VALUES (${values})`;
+			console.log(request);
+			console.log(varArray);
+			await query(request, varArray);
+			return (1);
+		}
+		return (0);		
+	} catch (err){
+		console.log(err);
+	}
+}
+
 async function findEmail(email, newEmail){
 	try{
 		let request = `SELECT * FROM ${config.USERS_TABLE} WHERE (Email=? OR NewEmail=?) AND DateDeleted IS NULL`;
@@ -158,6 +178,7 @@ async function insertUser(user){
 
 module.exports = {
 	newUser,
+	insert,
 	updateUser,
 	findEmail,
 	findId,
