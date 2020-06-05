@@ -17,10 +17,14 @@ router.post('/login', async (req, res) => {
 	if (data != null){
 		console.log(data);
 	}
-	res.send("Hello WOrk");
+	res.send("Hello WOrk")
 });
 
-router.get('/updateUserProfile', async (req, res) => {
+router.post('/updateUserProfile', async (req, res) => {
+	try {
+	}catch(err){
+		console.log (err);
+	}
 });
 
 router.get('/resetUserPassword', async (req, res) => {

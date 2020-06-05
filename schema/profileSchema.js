@@ -5,11 +5,11 @@ const mail = require('./emailSchema');
 const gen = require('./generatorSchema');
 
 // gen.generateUsers(50);
-sql.findId(494)
-.then((user)=>{
-	if (user != null)
-		console.log(user);
-})
+// sql.findId(494)
+// .then((user)=>{
+// 	if (user != null)
+// 		console.log(user);
+// })
 //returns the user on success, array of errors on failure
 async function registerUser(user){
 	var errors = [];
