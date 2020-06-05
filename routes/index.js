@@ -13,7 +13,7 @@ router.post('/register', async (req, res) => {
 
 router.post('/login', async (req, res) => {
 	console.log(req.body);
-	let data = profile.loginUser(req.body)
+	let data = await profile.loginUser(req.body)
 	if (data != null){
 		console.log(data);
 	}
