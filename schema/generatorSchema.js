@@ -31,6 +31,8 @@ async function generateUsers(amount){
 		//user.push (await generateLocation());
 		//dateverified
 		user.push (await new Date().toLocaleDateString());
+		//profile image
+		//other images
 		request = `Username, Firstname, Lastname, Birthdate, Gender, SexualPreference, Email, Password, Biography, DateVerified`;
 
 		await sql.insert(request, user);

@@ -4,33 +4,12 @@ const bcrypt = require('bcryptjs');
 const mail = require('./emailSchema');
 const gen = require('./generatorSchema');
 
-const user1 = {
-	Id : 43,
-	Username : "BOB",
-	Firstname : "Bob",
-	Lastname : "Nan",
-	Birthdate : new Date(1997,08,29).toLocaleDateString(),
-	Email : "Boban@dispostable.com",
-	Gender : "Male",
-	SexualPreference : "Bisexual",
-	Password : "StaciesMom1!",
-	RePassword : "StaciesMom1!",
-}
-
-const user2 = {
-	Id : 44,
-	Username : "bobby",
-	Firstname : "user",
-	Lastname : "user",
-	Birthdate : new Date(1997,08,29).toLocaleDateString(),
-	Email : "Bobnan@dispostable.com",
-	Gender : "Male",
-	SexualPreference : "Bisexual",
-	Password : "StaciesMom1!",
-	RePassword : "StaciesMom1!"
-}
-gen.generateUsers(5);
-
+// gen.generateUsers(50);
+sql.findId(494)
+.then((user)=>{
+	if (user != null)
+		console.log(user);
+})
 //returns the user on success, array of errors on failure
 async function registerUser(user){
 	var errors = [];
