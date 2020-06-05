@@ -309,7 +309,7 @@ async function deleteUser(user){
 		return (errors);
 	}
 }
-
+//Returns 1 on Liked/Disliked,and 0 on error;
 async function likeUser(id, profileId){
 	try{
 		if (id != null && profileId != null){
@@ -329,18 +329,12 @@ async function likeUser(id, profileId){
 				if (user1.Liked.includes(profileId)){
 					if (user2.LikedBy.includes(id)){
 						//unlike user;
-						let rm1 = user1.Liked.indexOf(profileId);
-						let rm2 = user2.LikedBy.indexOf(id);
-						console.log(user1.Liked);
-						console.log(user2.LikedBy);
-						//something is not working here;	
-						if (rm1 > -1)
-							user1.Liked = user1.Liked.splice(rm1, 1)
-						if (rm2 > -1)
-							user2.LikedBy = user2.LikedBy.splice(rm2, 1);
-						console.log(user1.Liked);
-						console.log(user2.LikedBy);
-							
+						user1.Liked = user1.Liked.filter((e)=>{
+							return (e != profileId);
+						})
+						user2.LikedBy = user2.LikedBy.filter((e)=>{
+							return (e != id);
+						})
 					}
 				} else {
 					user1.Liked.push(profileId);
