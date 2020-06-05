@@ -32,8 +32,10 @@ async function generateUsers(amount){
 		//dateverified
 		user.push (await new Date().toLocaleDateString());
 		//profile image
+		user.push (await generateImageLink());
 		//other images
-		request = `Username, Firstname, Lastname, Birthdate, Gender, SexualPreference, Email, Password, Biography, DateVerified`;
+
+		request = `Username, Firstname, Lastname, Birthdate, Gender, SexualPreference, Email, Password, Biography, DateVerified, Avatar`;
 
 		await sql.insert(request, user);
 	}
@@ -104,6 +106,10 @@ function generatePassword(){
 
 function generateBiography(){
 	return ("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua");
+}
+
+async function generateImageLink(){
+	return (`https://picsum.photos/400/250?random=${getRandomInt(0, 9999)}`);
 }
 
 function gererateInterests(amount){

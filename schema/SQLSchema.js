@@ -71,11 +71,11 @@ async function newUser(user){
 }
 
 //kinda working
-async function updateUser(user, qry, varArray){
+async function updateUser(id, qry, varArray){
 	try{
-		if (user && user.Email){
-			let request = `UPDATE ${config.USERS_TABLE} SET ${qry} WHERE Email=? AND DateDeleted IS NULL`;
-			varArray.push(user.Email);
+		if (id != null && qry != null && varArray != null){
+			let request = `UPDATE ${config.USERS_TABLE} SET ${qry} WHERE Id=? AND DateDeleted IS NULL`;
+			varArray.push(id);
 			await query(request, varArray);
 			return (1);
 		}
@@ -158,6 +158,27 @@ async function buildQuery(queryArray){
 	return(request);
 }
 
+async function getAllActiveUsers(){
+	try{
+		let request = `SELECT * FROM ${config.USERS_TABLE} WHERE DateDeleted IS NULL`;
+		let data = await query(request, varArray);
+		return data;
+
+	} catch(err){
+		console.log(err);
+	}
+}
+
+async function searchAllActiveUsers(where, varArray){
+	try{
+		let request = `SELECT * FROM ${config.USERS_TABLE} WHERE ${where} AND DateDeleted IS NULL`;
+		let data = await query(request, varArray);
+		return data;
+
+	} catch(err){
+		console.log(err);
+	}
+}
 //SUBMODULES
 async function insertUser(user){
 	//this has no security checks
@@ -178,6 +199,8 @@ async function insertUser(user){
 
 module.exports = {
 	newUser,
+	getAllActiveUsers,
+	searchAllActiveUsers,
 	insert,
 	updateUser,
 	findEmail,

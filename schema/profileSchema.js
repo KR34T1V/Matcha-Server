@@ -5,6 +5,10 @@ const mail = require('./emailSchema');
 const gen = require('./generatorSchema');
 
 // gen.generateUsers(50);
+likeUser(1,2)
+.then((res)=>{
+	console.log(res);
+})
 // sql.findId(494)
 // .then((user)=>{
 // 	if (user != null)
@@ -191,7 +195,7 @@ async function updateUserProfile(user){
 			}
 			if (errors.length == 0){
 				request = await sql.buildQuery(build);
-				if (await sql.updateUser(user, request, form))
+				if (await sql.updateUser(user.Id, request, form))
 					return user;
 				errors.push('An Unexpected Error Occured Please Try Again Later...');
 			}
@@ -212,7 +216,7 @@ async function resetUserPassword(user){
 			return(['Fields are not valid']);
 		let key = await bcrypt.genSalt(1);
 		let request = `VerifyKey=?`;
-		let data = await sql.updateUser(user, request, [ key ]);
+		let data = await sql.updateUser(User.Id, request, [ key ]);
 		if (!data)
 			errors.push('Account was not found');
 		else {
@@ -258,7 +262,7 @@ async function changeUserPassword(user){
 		if (errors.length == 0){
 			let hash = await bcrypt.hash(user.Password, 6);
 			let request = `Password=?, VerifyKey=?`
-			data = sql.updateUser(user, request, [hash, null])
+			data = sql.updateUser(User.Id, request, [hash, null])
 			if (data){
 				user.Password = hash;
 				return(user);
@@ -285,7 +289,7 @@ async function deleteUser(user){
 			if (data != null){
 				if (await bcrypt.compare(user.Password, data.Password)){
 					let request = `DateDeleted=?`
-					let res = await sql.updateUser(user, request, new Date().toLocaleDateString());
+					let res = await sql.updateUser(user.Id, request, new Date().toLocaleDateString());
 					if (res){
 						return (null);
 					} else {
@@ -306,47 +310,65 @@ async function deleteUser(user){
 	}
 }
 
-async function likeUser(user){
-	user.LikeId = 44;
-	if (user == null || user.Id == null || user.LikeId == null)
-	return (['Fields are not valid']);
-	console.log('Id = ' + user.Id);
-	console.log('LikeId = ' + user.LikeId);
-	let data1 = await sql.findId(user.Id);
-	let data2 = await sql.findId(user.LikeId);
-	//check if already liked
-		//unlike if already liked
-	//like
-	console.log("wtff");
-	console.log(data1);
-	console.log(data2);
-	console.log("wtff");
+async function likeUser(id, profileId){
+	try{
+		if (id != null && profileId != null){
+			let user1 = await sql.findId(id);
+			let user2 = await sql.findId(profileId);
+			if (user1 != null && user1.Id != null){
+				if (user1.Liked == null)
+					user1.Liked = [];
+				else
+					user1.Liked = JSON.parse(user1.Liked);
 
+				if (user2.LikedBy == null)
+					user2.LikedBy = [];
+				else 
+					user2.LikedBy = JSON.parse(user2.LikedBy);
 
-	if (data1 != null &&  data2 != null){
-
-		if (data1.LikedBy != null && data2.Liked != null){
-			//Unlike if already liked
-			if (data1.Liked.find(user.LikeId))
-				console.log(data1.Liked.find(profileId));
-			if (data2.LikedBy.find(user.Id))
-				console.log(data2.LikedBy.find(user.Id));
-			console.log("wtff");
-			
-		} else{
-			//Like
-			let request = `Liked=?`;
-			data1.Liked = [data2.Id];
-			console.log("wtff");
-
-			// data1.Liked = data1.Liked.some((value) => {return(value != data2.Id)});
-			data1 = await sql.updateUser(data1, request, data1.Liked);
+				if (user1.Liked.includes(profileId)){
+					if (user2.LikedBy.includes(id)){
+						//unlike user;
+						let rm1 = user1.Liked.indexOf(profileId);
+						let rm2 = user2.LikedBy.indexOf(id);
+						console.log(user1.Liked);
+						console.log(user2.LikedBy);
+						//something is not working here;	
+						if (rm1 > -1)
+							user1.Liked = user1.Liked.splice(rm1, 1)
+						if (rm2 > -1)
+							user2.LikedBy = user2.LikedBy.splice(rm2, 1);
+						console.log(user1.Liked);
+						console.log(user2.LikedBy);
+							
+					}
+				} else {
+					user1.Liked.push(profileId);
+					user2.LikedBy.push(id);
+				}
+				let request = `Liked=JSON_ARRAY(?)`;
+				let data1 = await sql.updateUser(id, request, [user1.Liked])
+				request = `LikedBy=JSON_ARRAY(?)`;
+				let data2 = await sql.updateUser(profileId, request, [user2.LikedBy]);
+				if (data1 == 1 && data2 == 1)
+					return(1);
+				return (0);
+			}
+	
 		}
+
+	} catch (err){
+		console.log(err);
 	}
 }
 
-async function populateDatabase(){
-	
+async function grabUsers(user){
+	if (user != null){
+		//Age min-max
+		//Distance min-max
+		//Interests min-max
+		//Fame Rating min-max
+	}
 }
 module.exports = {
 	likeUser,

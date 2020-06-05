@@ -1,23 +1,32 @@
 const express = require("express");
 const router = express.Router();
-const profile = require(`../schema/profileSchema`)
+const profile = require(`../schema/profileSchema`);
+const sql = require('../schema/SQLSchema');
+
+router.post('/home'), async (req, res) => {
+	let data = await sql.getAllActiveUsers();
+	console.log(data);
+	if (data != null)
+		res.send(data);
+}
 
 router.post('/register', async (req, res) => {
 	console.log(req.body);
 	let data = profile.registerUser(req.body);
-	if (data != null){
-		console.log(data);
+	if (data != null && data.Id != null){
+		res.send(data);
 	}
-	res.send("Hello Homie")
+	res.send(data)
 });
 
 router.post('/login', async (req, res) => {
 	console.log(req.body);
 	let data = await profile.loginUser(req.body)
-	if (data != null){
+	if (data != null && data.Id != null){
 		console.log(data);
+		res.send(data);
 	}
-	res.send("Hello WOrk")
+	res.send(data);
 });
 
 router.post('/updateUserProfile', async (req, res) => {
