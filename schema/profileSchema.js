@@ -8,14 +8,14 @@ const gen = require('./generatorSchema');
 start();
 
 async function start(){
-	console.log(await viewUser(1, 2));
-	console.log(await viewUser(1, 3));
-	console.log(await viewUser(1, 4));
-	console.log(await viewUser(1, 5));
-	console.log(await viewUser(1, 6));
+	// await gen.generateUsers(10);
+	// console.log(await viewUser(1, 2));
+	// console.log(await viewUser(1, 3));
+	// console.log(await viewUser(1, 4));
+	// console.log(await viewUser(1, 5));
+	// console.log(await viewUser(1, 6));
 
 }
-// gen.generateUsers(10);s
 // likealot(50, 10);
 // sql.findId(494)
 // .then((user)=>{
@@ -396,6 +396,42 @@ async function viewUser(id, profileId){
 		return (null);
 	} catch(err){
 		console.log(err);
+	}
+}
+
+async function blockUser(id, profileId){
+	try{
+		let output;
+		if (id != null && profileId != null){
+			let user1 = await sql.findId(id);
+			let user2 = await sql.findId(profileId);
+
+			if (user1 != null && user2 !=null){
+				if (user1.BlockedUsers == null)
+					user1.BlockedUsers = [];
+				else 
+					user1.BlockedUsers = JSON.parse(user1.BlockedUsers);
+				//unblock user if already blocked
+				if (user1.BlockedUsers.includes(profileId)){
+					output = `${id} unblocked ${profileId}`;
+					user1.BlockedUsers = user1.BlockedUsers.filter((e)=>e!=profileId)
+				} else {
+					output = `${id} blocked ${profileId}`;
+					user1.BlockedUsers.push(profileId);
+				}
+				user1.BlockedUsers = JSON.stringify(user1.BlockedUsers);
+				let request = `BlockedUsers=?`;
+				let res = await sql.updateUser(id, request, [user1.BlockedUsers]);
+				if (res == 1){
+					console.log(output);
+					return(1);
+				}
+			}
+		}
+		return (null);
+	} catch (err){
+	blockUser(1, 2);
+	console.log(err);
 	}
 }
 
