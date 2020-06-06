@@ -4,7 +4,18 @@ const bcrypt = require('bcryptjs');
 const mail = require('./emailSchema');
 const gen = require('./generatorSchema');
 
-// gen.generateUsers(10);
+
+start();
+
+async function start(){
+	console.log(await viewUser(1, 2));
+	console.log(await viewUser(1, 3));
+	console.log(await viewUser(1, 4));
+	console.log(await viewUser(1, 5));
+	console.log(await viewUser(1, 6));
+
+}
+// gen.generateUsers(10);s
 // likealot(50, 10);
 // sql.findId(494)
 // .then((user)=>{
@@ -18,7 +29,8 @@ async function likealot(n, maxUsers){
 		await likeUser(gen.getRandomInt(0, maxUsers), gen.getRandomInt(0, maxUsers));
 	}
 }
-//returns the user on success, array of errors on failure
+
+//returns null on success, array of errors on failure
 async function registerUser(user){
 	var errors = [];
 	let result;
@@ -59,8 +71,8 @@ async function registerUser(user){
 
 			result = await sql.newUser(form);
 			if (result){
-				mail.verifyEmail(user.Email, user.Username, user.VerifyKey);
-				return (form);
+				mail.verifyEmail(form.Email, form.Id, form.Username, form.VerifyKey);
+				return (null);
 			} else
 				errors.push('Email is already in use');
 		}
@@ -359,20 +371,41 @@ async function likeUser(id, profileId){
 	}
 }
 
-async function grabUsers(user){
-	if (user != null){
-		//Age min-max
-		//Distance min-max
-		//Interests min-max**
-		//Fame Rating min-max
+async function viewUser(id, profileId){
+	try {
+		if (id != null && profileId != null){
+			let data = await sql.findId(profileId);
+			if (data != null && data.Id != null){
+				//check for array
+				if (data.ViewedBy == null)
+					data.ViewedBy = [];
+				else
+					data.ViewedBy = JSON.parse(data.ViewedBy);
+
+				if (!data.ViewedBy.includes(id)){
+					data.ViewedBy.push(id);
+				}
+
+				data.ViewedBy = JSON.stringify(data.ViewedBy);
+				let request = `ViewedBy=?`;
+				let res = await sql.updateUser(profileId, request, [data.ViewedBy]);
+				if (res == 1)
+					return (data);
+			}
+		}
+		return (null);
+	} catch(err){
+		console.log(err);
 	}
 }
+
 module.exports = {
 	likeUser,
 	deleteUser,
 	changeUserPassword,
 	resetUserPassword,
 	updateUserProfile,
+	viewUser,
 	loginUser,
 	registerUser
 }

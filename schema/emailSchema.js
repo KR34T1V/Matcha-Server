@@ -1,7 +1,7 @@
 var nodemailer = require('nodemailer');
 
 
-function verifyEmail(email, username, key){
+function verifyEmail(email, id, username, key){
 	let from = '"Matcha" <Verify@matcha.com>';
 	let to = email;
 	let subject = `${username} Please Verify Your Email.`;
@@ -10,7 +10,7 @@ function verifyEmail(email, username, key){
 	Dear ${username},
 	Please use the following link to verify your Matcha account:
 	
-	http://localhost:3000/users/verify?email=${email}&key=${key}
+	http://localhost:3000/users/verify?id=${id}&key=${key}
 
 	Regards,
 	Matcha Team
@@ -20,7 +20,7 @@ function verifyEmail(email, username, key){
 	Dear <strong>${username}<strong>,
 	<p>Please use the following link to verify your Matcha account:</p><br/>
 
-	<h4><a href="http://localhost:3000/users/verify?email=${email}&key=${key}">Click Me..</a></h4>
+	<h4><a href="http://localhost:3000/users/verify?id=${id}&key=${key}">Click Me..</a></h4>
 
 	<p>Regards,</p>
 	<p>Matcha Team</p>

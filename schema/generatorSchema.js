@@ -27,6 +27,8 @@ async function generateUsers(amount){
 			user.push (await generateBiography());
 			//interests
 			user.push (JSON.stringify(await gererateInterests(5)));
+			//viewed by
+			user.push (JSON.stringify(await generateViews(getRandomInt(1,1), amount)));
 			//location		
 			user.push (JSON.stringify(await generateLocation()));
 			//dateverified
@@ -36,7 +38,7 @@ async function generateUsers(amount){
 			//other images
 			user.push(JSON.stringify(await generateImageArray(5)));
 	
-			request = `Username, Firstname, Lastname, Birthdate, Gender, SexualPreference, Email, Password, Biography, Interests, Location, DateVerified, Avatar, Images`;
+			request = `Username, Firstname, Lastname, Birthdate, Gender, SexualPreference, Email, Password, Biography, Interests, ViewedBy, Location, DateVerified, Avatar, Images`;
 	
 			await sql.insert(request, user);
 		}
@@ -123,8 +125,18 @@ function generateImageArray(amount){
 	}
 	return (images);
 }
+
 function generateImageLink(){
 	return (`https://picsum.photos/400/250?random=${getRandomInt(0, 9999)}`);
+}
+
+function generateViews(n, maxUsers){
+	let views = [];
+	let i = 0;	
+	while (i++ <= n){
+		views.push(getRandomInt(0, maxUsers))
+	}
+	return (views);
 }
 
 function gererateInterests(amount){

@@ -11,12 +11,16 @@ router.post('/home'), async (req, res) => {
 }
 
 router.post('/register', async (req, res) => {
-	console.log(req.body);
-	let data = profile.registerUser(req.body);
-	if (data != null && data.Id != null){
+	//security checks
+	let data = await  profile.registerUser(req.body);
+	if (data == null){
+			data = await sql.findEmail(req.body.Email)
+			console.log(data);
+		if (data != null && data.Id != null){
+			res.send(data);
+		}
+	} else 
 		res.send(data);
-	}
-	res.send(data)
 });
 
 router.post('/login', async (req, res) => {
@@ -35,6 +39,11 @@ router.post('/updateUserProfile', async (req, res) => {
 		console.log (err);
 	}
 });
+
+router.post('/viewUser'), async (req, res) => {
+	console.log(req.body);
+	console.log(await profile.viewUser(1, 2));
+}
 
 router.get('/resetUserPassword', async (req, res) => {
 });
