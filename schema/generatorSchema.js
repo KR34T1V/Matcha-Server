@@ -2,45 +2,49 @@ const sql = require('./SQLSchema');
 const bcrypt = require('bcryptjs');
 
 async function generateUsers(amount){
-	let count = 0;
-	let date;
-	let request;
-	while (count++ < amount){
-		let user = []
-		//username	
-		user.push (await generateUsername());
-		//firstname
-		user.push (await generateFirstname());
-		//lastname
-		user.push (await generateLastname());
-		//birthdate
-		user.push (await generateBirthdate());
-		//gender
-		user.push (await generateGender());
-		//sexuality
-		user.push (await generateSexualPreference());
-		//email
-		user.push (await generateEmail());
-		//password
-		user.push (await generatePassword());
-		//biography
-		user.push (await generateBiography());
-		//interests
-		// user.push (await gererateInterests(5));
-		//location		
-		//user.push (await generateLocation());
-		//dateverified
-		user.push (await new Date().toLocaleDateString());
-		//profile image
-		user.push (await generateImageLink());
-		//other images
-
-		request = `Username, Firstname, Lastname, Birthdate, Gender, SexualPreference, Email, Password, Biography, DateVerified, Avatar`;
-
-		await sql.insert(request, user);
+	try{
+		let count = 0;
+		let date;
+		let request;
+		while (count++ < amount){
+			let user = []
+			//username	
+			user.push (await generateUsername());
+			//firstname
+			user.push (await generateFirstname());
+			//lastname
+			user.push (await generateLastname());
+			//birthdate
+			user.push (await generateBirthdate());
+			//gender
+			user.push (await generateGender());
+			//sexuality
+			user.push (await generateSexualPreference());
+			//email
+			user.push (await generateEmail());
+			//password
+			user.push (await generatePassword());
+			//biography
+			user.push (await generateBiography());
+			//interests
+			user.push (JSON.stringify(await gererateInterests(5)));
+			//location		
+			//user.push (await generateLocation());
+			//dateverified
+			user.push (await new Date().toLocaleDateString());
+			//profile image
+			user.push (generateAvatar());
+			//other images
+			user.push(JSON.stringify(await generateImageArray(5)));
+	
+			request = `Username, Firstname, Lastname, Birthdate, Gender, SexualPreference, Email, Password, Biography, Interests, DateVerified, Avatar, Images`;
+	
+			await sql.insert(request, user);
+		}
+	} catch (err){
+		console.log(err);
 	}
 }
-
 //https://gist.github.com/tkon99/4c98af713acc73bed74c
 
 function capFirst(string) {
@@ -108,7 +112,19 @@ function generateBiography(){
 	return ("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua");
 }
 
-async function generateImageLink(){
+function generateAvatar(){
+	return (`https://picsum.photos/400/250?random=${getRandomInt(0, 9999)}`);
+}
+
+function generateImageArray(amount){
+	let i = 0;
+	let images = [];
+	while (i++ <= amount){
+		images.push(`https://picsum.photos/400/250?random=${getRandomInt(0, 9999)}`);
+	}
+	return (images);
+}
+function generateImageLink(){
 	return (`https://picsum.photos/400/250?random=${getRandomInt(0, 9999)}`);
 }
 
@@ -133,10 +149,7 @@ function generateLocation(){
 	})
 }
 
-function generateImages(){
-	return (null);
-}
-
 module.exports = {
-	generateUsers
+	generateUsers,
+	getRandomInt
 }

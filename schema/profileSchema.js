@@ -4,16 +4,19 @@ const bcrypt = require('bcryptjs');
 const mail = require('./emailSchema');
 const gen = require('./generatorSchema');
 
-// gen.generateUsers(50);
-likeUser(1,2)
-.then((res)=>{
-	console.log(res);
-})
+// gen.generateUsers(10);
+likealot(50, 10);
 // sql.findId(494)
 // .then((user)=>{
 // 	if (user != null)
 // 		console.log(user);
 // })
+async function likealot(likes, maxUsers){
+	let i = 0;
+	while (i++ <= likes){
+		await likeUser(gen.getRandomInt(0, maxUsers), gen.getRandomInt(0, maxUsers));
+	}
+}
 //returns the user on success, array of errors on failure
 async function registerUser(user){
 	var errors = [];
@@ -315,7 +318,9 @@ async function likeUser(id, profileId){
 		if (id != null && profileId != null){
 			let user1 = await sql.findId(id);
 			let user2 = await sql.findId(profileId);
-			if (user1 != null && user1.Id != null){
+			if (user1 != null && user1.Id != null && user2 != null && user2.Id != null
+				&& user1.Id != user2.Id){
+				//check that array exists
 				if (user1.Liked == null)
 					user1.Liked = [];
 				else
@@ -325,32 +330,26 @@ async function likeUser(id, profileId){
 					user2.LikedBy = [];
 				else 
 					user2.LikedBy = JSON.parse(user2.LikedBy);
-
-				if (user1.Liked.includes(profileId)){
-					if (user2.LikedBy.includes(id)){
-						//unlike user;
-						user1.Liked = user1.Liked.filter((e)=>{
-							return (e != profileId);
-						})
-						user2.LikedBy = user2.LikedBy.filter((e)=>{
-							return (e != id);
-						})
-					}
+				// unlike user if already liked
+				if (user1.Liked.includes(profileId) || user2.LikedBy.includes(id)){
+					console.log(`${id} disliked ${profileId}`);
+					user1.Liked = user1.Liked.filter(e => e != profileId);
+					user2.LikedBy = user2.LikedBy.filter(e => e != id);
 				} else {
+					console.log(`${id} liked ${profileId}`);
 					user1.Liked.push(profileId);
 					user2.LikedBy.push(id);
 				}
-				let request = `Liked=JSON_ARRAY(?)`;
-				let data1 = await sql.updateUser(id, request, [user1.Liked])
-				request = `LikedBy=JSON_ARRAY(?)`;
-				let data2 = await sql.updateUser(profileId, request, [user2.LikedBy]);
-				if (data1 == 1 && data2 == 1)
+				let request = `Liked=?`;
+				let data1 = await sql.updateUser(id, request, [JSON.stringify(user1.Liked)])
+				request = `LikedBy=?`;
+				let data2 = await sql.updateUser(profileId, request, [JSON.stringify(user2.LikedBy)]);
+				if (data1 == 1 && data2 == 1){
 					return(1);
+				}
 				return (0);
 			}
-	
 		}
-
 	} catch (err){
 		console.log(err);
 	}
@@ -360,7 +359,7 @@ async function grabUsers(user){
 	if (user != null){
 		//Age min-max
 		//Distance min-max
-		//Interests min-max
+		//Interests min-max**
 		//Fame Rating min-max
 	}
 }
