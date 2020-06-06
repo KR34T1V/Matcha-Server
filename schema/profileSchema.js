@@ -5,15 +5,16 @@ const mail = require('./emailSchema');
 const gen = require('./generatorSchema');
 
 // gen.generateUsers(10);
-likealot(50, 10);
+// likealot(50, 10);
 // sql.findId(494)
 // .then((user)=>{
 // 	if (user != null)
 // 		console.log(user);
 // })
-async function likealot(likes, maxUsers){
+//generates 'n' amount of likes between ids, 0 and maxUsers
+async function likealot(n, maxUsers){
 	let i = 0;
-	while (i++ <= likes){
+	while (i++ <= n){
 		await likeUser(gen.getRandomInt(0, maxUsers), gen.getRandomInt(0, maxUsers));
 	}
 }
@@ -312,8 +313,10 @@ async function deleteUser(user){
 		return (errors);
 	}
 }
-//Returns 1 on Liked/Disliked,and 0 on error;
+
+//Returns 1 on Liked -1 on Disliked,and 0 on error;
 async function likeUser(id, profileId){
+	let rtn = 1;
 	try{
 		if (id != null && profileId != null){
 			let user1 = await sql.findId(id);
@@ -335,6 +338,7 @@ async function likeUser(id, profileId){
 					console.log(`${id} disliked ${profileId}`);
 					user1.Liked = user1.Liked.filter(e => e != profileId);
 					user2.LikedBy = user2.LikedBy.filter(e => e != id);
+					rtn = -1;
 				} else {
 					console.log(`${id} liked ${profileId}`);
 					user1.Liked.push(profileId);
@@ -345,7 +349,7 @@ async function likeUser(id, profileId){
 				request = `LikedBy=?`;
 				let data2 = await sql.updateUser(profileId, request, [JSON.stringify(user2.LikedBy)]);
 				if (data1 == 1 && data2 == 1){
-					return(1);
+					return(rtn);
 				}
 				return (0);
 			}

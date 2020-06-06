@@ -4,7 +4,6 @@ const bcrypt = require('bcryptjs');
 async function generateUsers(amount){
 	try{
 		let count = 0;
-		let date;
 		let request;
 		while (count++ < amount){
 			let user = []
@@ -29,7 +28,7 @@ async function generateUsers(amount){
 			//interests
 			user.push (JSON.stringify(await gererateInterests(5)));
 			//location		
-			//user.push (await generateLocation());
+			user.push (JSON.stringify(await generateLocation()));
 			//dateverified
 			user.push (await new Date().toLocaleDateString());
 			//profile image
@@ -37,7 +36,7 @@ async function generateUsers(amount){
 			//other images
 			user.push(JSON.stringify(await generateImageArray(5)));
 	
-			request = `Username, Firstname, Lastname, Birthdate, Gender, SexualPreference, Email, Password, Biography, Interests, DateVerified, Avatar, Images`;
+			request = `Username, Firstname, Lastname, Birthdate, Gender, SexualPreference, Email, Password, Biography, Interests, Location, DateVerified, Avatar, Images`;
 	
 			await sql.insert(request, user);
 		}
