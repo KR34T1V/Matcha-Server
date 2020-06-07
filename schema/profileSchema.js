@@ -8,6 +8,7 @@ const gen = require('./generatorSchema');
 start();
 
 async function start(){
+	await verifyUser(1,"$2a$04$No3uJbEIxz2ZNbHb3oqU3O");
 	// await gen.generateUsers(10);
 	// console.log(await viewUser(1, 2));
 	// console.log(await viewUser(1, 3));
@@ -178,8 +179,8 @@ async function updateUserProfile(user){
 
 			//EMAIL
 			if (user.NewEmail != null && user.NewEmail != data.Email){
-				if (!verify.checkPassword(user.Password))
-					errors.push('Password must contain: \'uppercase\', \'lowercase\', \'numeric\', \'special\' characters');
+				if (!verify.checkEmail(user.NewEmail))
+					errors.push('Invalid Email address');
 				else {
 					//Create new key
 					user.VerifyKey = await bcrypt.genSalt(1);
@@ -433,6 +434,27 @@ async function blockUser(id, profileId){
 	blockUser(1, 2);
 	console.log(err);
 	}
+}
+
+async function verifyUser(id, key){
+	if (id != null && key != null){
+		let data = await sql.findId(id);
+		if (data != null && data.VerifyKey != null && data.DateVerified == null){
+			//verify
+			if (key == data.VerifyKey){
+				data.VerifyKey = null;
+				data.DateVerified = new Date();
+				let request = `VerifyKey=?, DateVerified=?`
+				let res = await sql.updateUser(id, request,
+					[data.VerifyKey, data.DateVerified] );
+				if (res == 1){
+					console.log(`${id} verified account`);
+					return(1)
+				}
+			}
+		}
+	}
+	return (0);
 }
 
 module.exports = {
