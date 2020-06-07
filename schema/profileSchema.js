@@ -3,17 +3,16 @@ const verify = require('./verificationSchema');
 const bcrypt = require('bcryptjs');
 const mail = require('./emailSchema');
 const gen = require('./generatorSchema');
-
+const moment = require ('moment');
 
 start();
 
 async function start(){
-	await verifyUser(1,"$2a$04$No3uJbEIxz2ZNbHb3oqU3O");
+	let user = await sql.findId(1);
+	if (user != null)
+		calculateUserAge(user);
 	// await gen.generateUsers(10);
-	// console.log(await viewUser(1, 2));
-	// console.log(await viewUser(1, 3));
-	// console.log(await viewUser(1, 4));
-	// console.log(await viewUser(1, 5));
+	// console.log(await findIds([1,2,3,4,5,6]));
 	// console.log(await viewUser(1, 6));
 
 }
@@ -93,17 +92,24 @@ async function loginUser(user){
 		if (user == null || user.Email == null || user.Password == null)
 			return (['Fields are not valid']);
 		let data = await sql.findEmail(user.Email);
-		if (data == null)
+		if (data == null && user.NewEmail != null)
 			data = await sql.findEmail(user.NewEmail);
 		if (data != null){
 			if (data.Password){
 				let result = await bcrypt.compare(user.Password, data.Password);
 				if (result == true){
-					return (data);
+					let salt = await bcrypt.genSalt(1);
+					result = await newAccessToken(data.Id, salt);
+					if (result == 1){
+						data.AccessToken = salt;
+						return (data);
+					}
+					else
+						errors.push("Failed to generate access token");
 				} else{
 					errors.push("Password Incorrect");
-					return (errors);
 				}
+				return (errors);
 			}
 		}
 		errors.push("Unknown user");
@@ -221,6 +227,42 @@ async function updateUserProfile(user){
 		console.log(err);
 		return (['An Unexpected Error Occured Please Try Again Later...'])
 	}
+}
+
+async function verifyUserEmail(id, key){
+	if (id != null && key != null){
+		let data = await sql.findId(id);
+		if (data != null && data.VerifyKey != null && data.DateVerified == null){
+			//verify
+			if (key == data.VerifyKey){
+				if (data.NewEmail != null){
+					data.Email = data.NewEmail;
+					data.VerifyKey = null;
+					data.DateVerified = new Date();
+				} else {
+					data.VerifyKey = null;
+					data.DateVerified = new Date();
+					//set new email if required
+					if (data.NewEmail != null){
+						data.Email = data.NewEmail;
+						let request = `Email=?, VerifyKey=?, DateVerified=?`
+						let res = await sql.updateUser(id, request,
+						[data.Email, data.VerifyKey, data.DateVerified] );
+					} else {
+						//verify account;
+						let request = `VerifyKey=?, DateVerified=?`
+						let res = await sql.updateUser(id, request,
+						[data.VerifyKey, data.DateVerified] );
+					}
+					if (res == 1){
+						console.log(`${id} verified account`);
+						return(1)
+					}
+				}
+			}
+		}
+	}
+	return (0);
 }
 
 //returns the modified user on success, array of errors on failure
@@ -400,6 +442,22 @@ async function viewUser(id, profileId){
 	}
 }
 
+//returns an array of matching users if found, else null is returned
+async function findIds(idArray) {
+	if (idArray != null) {
+	  const users = await Promise.all(
+		idArray.map(async (id) => {
+		  let res = await sql.findId(id);
+		  if (res != null) 
+		  	return res;
+		})
+	  );
+	  console.log(users);
+	  if (users.length > 0) return users;
+	}
+	return null;
+  }
+
 async function blockUser(id, profileId){
 	try{
 		let output;
@@ -436,25 +494,52 @@ async function blockUser(id, profileId){
 	}
 }
 
-async function verifyUser(id, key){
-	if (id != null && key != null){
-		let data = await sql.findId(id);
-		if (data != null && data.VerifyKey != null && data.DateVerified == null){
-			//verify
-			if (key == data.VerifyKey){
-				data.VerifyKey = null;
-				data.DateVerified = new Date();
-				let request = `VerifyKey=?, DateVerified=?`
-				let res = await sql.updateUser(id, request,
-					[data.VerifyKey, data.DateVerified] );
-				if (res == 1){
-					console.log(`${id} verified account`);
-					return(1)
-				}
+async function newAccessToken(id, token){
+	try{
+		if (id != null && token != null){
+			let data = await sql.findId(id);
+			if (data != null){
+				let request = `AccessToken=?`;
+				let res = sql.updateUser(id, request, [token]);
+				if (res != null)
+					return(1);
 			}
+			return (null);
 		}
+	} catch (err){
+		console.log(err);
 	}
-	return (0);
+}
+
+async function verifyAccessToken(token){
+	try {
+		if (token == null)
+			return(['Fields are not valid']);
+		let res = await sql.findAccessToken(token);
+		if (res != null && res.AccessToken != null)
+			if (res.AccessToken === token)
+				return (res);
+		return (null);
+	} catch (err){
+		console.log(err);
+	}
+}
+
+async function calculateUserFame(user){
+	let fame = 0;
+	if (user != null)
+		if (user.ViewedBy != null && user.LikedBy != null)
+			fame = (users.LikedBy.length/users.ViewedBy.length)*100;
+	return (fame);
+}
+
+async function calculateUserAge(user){
+	let today = moment().format("YYYY");
+	let age;
+	if (user != null){
+		age = parseInt(today) - parseInt(moment(user.Birthdate).format("YYYY"));
+		console.log (age);
+	}
 }
 
 module.exports = {
@@ -465,5 +550,9 @@ module.exports = {
 	updateUserProfile,
 	viewUser,
 	loginUser,
-	registerUser
+	registerUser,
+	findIds,
+	newAccessToken,
+	verifyAccessToken,
+	calculateUserFame
 }

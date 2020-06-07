@@ -105,11 +105,11 @@ async function insert(qry, varArray){
 	}
 }
 
-async function findEmail(email, newEmail){
+async function findEmail(email){
 	try{
 		let request = `SELECT * FROM ${config.USERS_TABLE} WHERE (Email=? OR NewEmail=?) AND DateDeleted IS NULL`;
-		let res = await query(request,[email, newEmail]);
-			if (res && res[0] && res[0]){
+		let res = await query(request,[email, email]);
+			if (res != null && res[0] != null){
 				return (res[0]);
 			}
 			return (null);
@@ -161,7 +161,7 @@ async function buildQuery(queryArray){
 async function getAllActiveUsers(){
 	try{
 		let request = `SELECT * FROM ${config.USERS_TABLE} WHERE DateDeleted IS NULL`;
-		let data = await query(request, varArray);
+		let data = await query(request, []);
 		return data;
 
 	} catch(err){
@@ -170,6 +170,7 @@ async function getAllActiveUsers(){
 }
 
 async function searchAllActiveUsers(where, varArray){
+	
 	try{
 		let request = `SELECT * FROM ${config.USERS_TABLE} WHERE ${where} AND DateDeleted IS NULL`;
 		let data = await query(request, varArray);
@@ -179,6 +180,20 @@ async function searchAllActiveUsers(where, varArray){
 		console.log(err);
 	}
 }
+
+async function findAccessToken(token){
+	try {
+		let request = `SELECT * FROM ${config.USERS_TABLE} WHERE AccessToken=? AND DateDeleted IS NULL`;
+		let res = await query(request,[token]);
+			if (res != null && res[0] != null){
+				return (res[0]);
+			}
+			return (null);
+	} catch (err){
+		console.log(err);
+	}
+}
+
 //SUBMODULES
 async function insertUser(user){
 	//this has no security checks
@@ -206,5 +221,6 @@ module.exports = {
 	findEmail,
 	findId,
 	findUsername,
-	buildQuery
+	buildQuery,
+	findAccessToken
 }

@@ -1,5 +1,6 @@
 const sql = require('./SQLSchema');
 const bcrypt = require('bcryptjs');
+const moment = require ('moment');
 
 async function generateUsers(amount){
 	try{
@@ -32,7 +33,7 @@ async function generateUsers(amount){
 			//location		
 			user.push (JSON.stringify(await generateLocation()));
 			//dateverified
-			user.push (await new Date().toLocaleDateString());
+			user.push (await new Date());
 			//profile image
 			user.push (generateAvatar());
 			//other images
