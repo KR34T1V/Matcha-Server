@@ -199,11 +199,11 @@ async function insertUser(user){
 	//this has no security checks
 	try{
 		let request = `INSERT INTO ${config.USERS_TABLE} 
-		(Username, Firstname, Lastname, Birthdate, Gender, SexualPreference, Email,
+		(Username, Firstname, Lastname, Birthdate, Gender, SexualPreference, NewEmail,
 		VerifyKey, Password) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 		console.log(user.VerifyKey);
 		let res = await query(request, [user.Username, user.Firstname, user.Lastname, 
-			user.Birthdate, user.Gender, user.SexualPreference, user.Email, user.VerifyKey, user.Password]);
+			user.Birthdate, user.Gender, user.SexualPreference, user.NewEmail, user.VerifyKey, user.Password]);
 		return (user);
 	} catch (err) {
 		console.log(err);

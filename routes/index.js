@@ -52,8 +52,8 @@ router.post('/register', async (req, res) => {
 	let data = await  profile.registerUser(req.body);
 	if (data == null){
 			data = await sql.findEmail(req.body.Email)
-			console.log(data);
 		if (data != null && data.Id != null){
+			console.log(`${data.Id} registered`);
 			res.send(data);
 		}
 	} else 
@@ -61,9 +61,14 @@ router.post('/register', async (req, res) => {
 });
 
 router.get('/verifyEmail', async (req, res)=> {
-	let Id = req.query.Id;
-	if (req.query.Id != null && req.query.VerifyKey != null)
-		profile.verifyUserEmail()
+	if (req.query.Id != null && req.query.VerifyKey != null){
+		let result = await profile.verifyUserEmail(req.query.Id, req.query.VerifyKey);
+		if (result == 1){
+			res.send("Success");
+		}
+		//return errors;
+		res.send(result);
+	} else res.send(["Oops, we had a little accident"]);
 })
 
 router.post('/login', async (req, res) => {

@@ -63,16 +63,17 @@ async function registerUser(user){
 			form.Birthdate = user.Birthdate;
 			form.Gender = user.Gender;
 			form.SexualPreference = user.SexualPreference;
-			form.Email = user.Email
+			form.NewEmail = user.Email
 			form.Password = await bcrypt.hash(user.Password, 6);
 			form.VerifyKey = await bcrypt.genSalt(1);
 
-			result = await sql.newUser(form);
-			if (result){
-				mail.verifyEmail(form.Email, form.Id, form.Username, form.VerifyKey);
+			await sql.newUser(form);
+			result = await sql.findEmail(form.NewEmail);
+			console.log(result)
+			if (result != null && result.Id != null){
+				mail.verifyEmail(result.NewEmail, result.Id, result.Username, result.VerifyKey);
 				return (null);
-			} else
-				errors.push('Email is already in use');
+			} else errors.push('Email is already in use');
 		}
 		return (errors);
 	} catch (err){
@@ -227,40 +228,30 @@ async function updateUserProfile(user){
 	}
 }
 
+//returns boolean value 1 on success 0 on failure
 async function verifyUserEmail(id, key){
-	if (id != null && key != null){
-		let data = await sql.findId(id);
-		if (data != null && data.VerifyKey != null && data.DateVerified == null){
-			//verify
-			if (key == data.VerifyKey){
-				if (data.NewEmail != null){
-					data.Email = data.NewEmail;
-					data.VerifyKey = null;
-					data.DateVerified = new Date();
-				} else {
-					data.VerifyKey = null;
-					data.DateVerified = new Date();
-					//set new email if required
-					if (data.NewEmail != null){
-						data.Email = data.NewEmail;
-						let request = `Email=?, VerifyKey=?, DateVerified=?`
-						let res = await sql.updateUser(id, request,
-						[data.Email, data.VerifyKey, data.DateVerified] );
-					} else {
-						//verify account;
-						let request = `VerifyKey=?, DateVerified=?`
-						let res = await sql.updateUser(id, request,
-						[data.VerifyKey, data.DateVerified] );
-					}
-					if (res == 1){
-						console.log(`${id} verified account`);
-						return(1)
-					}
-				}
-			}
-		}
+	let res;
+	let errors = [];
+	if (id == null || key == null)
+		return(['Fields are not valid']);
+	let data = await sql.findId(id);
+	if (data != null && data.VerifyKey != null && data.DateVerified == null){
+		//verify
+		if (key == data.VerifyKey && data.NewEmail != null){
+			data.VerifyKey = null;
+			data.DateVerified = new Date();
+			data.Email = data.NewEmail;
+			data.NewEmail = null;
+			let request = `Email=?, NewEmail=?, VerifyKey=?, DateVerified=?`
+			res = await sql.updateUser(id, request,
+			[data.Email, data.NewEmail, data.VerifyKey, data.DateVerified] );
+			if (res == 1){
+				console.log(`${id} verified email`);
+				return(1)
+			} else errors.push("Failed to verify");
+		} else errors.push("VerifyKey mismatch");
 	}
-	return (0);
+	return (errors);
 }
 
 //returns the modified user on success, array of errors on failure
