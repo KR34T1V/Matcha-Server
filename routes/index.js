@@ -5,38 +5,46 @@ const sql = require('../schema/SQLSchema');
 const filter = require('../schema/filterSchema');
 
 router.get('/home', async (req, res) => {
-	let payload;
-	//filter goes here
-	//filter blocked;
-	if (req.query.AccessToken != null){
-		let user = await profile.verifyAccessToken(req.query.AccessToken);
-		if (user != null && user.Id != null){
-			let data = await sql.getAllActiveUsers();
-			if (data != null)
-				payload = await filter.preference(user, data);
-			console.log(payload);
-		}
+	try {
+		let errors = [];
+		let payload;
+		//filter goes here
+		if (req.query.AccessToken != null){	
+			let user = await profile.verifyAccessToken(req.query.AccessToken);
+			if (user != null && user.Id != null){
+				let data = await sql.getAllActiveUsers();
+				if (data != null){
+					payload = await filter.preference(user, data);
+					//hide users with no avatar
+					payload = payload.filter(e=> e.Avatar != null);
+					//hide users that are blocked
+					if (user.Blocked != null && user.Blocked.length > 0)
+						payload = payload.filter(e=> !user.BlockedUsers.includes(e))
+				} else errors.push("Failed to get users");
+			} else errors.push("Invalid access token");
+		} else errors.push("Access token missing");
+		//build response
+		if (payload != null && errors.length > 0){
+			const finalPayload = await Promise.all(
+				payload.map(async val=>{
+					let user = {};
+					user.Id = val.Id;
+					user.Username = val.Username;
+					user.Firstname = val.Firstname;
+					user.Lastname = val.Lastname;
+					user.Avatar = val.Avatar;
+					user.FameRating = await profile.calculateUserFame(val);
+					user.Age = await profile.calculateUserAge(val);
+					user.Biography = val.Biography;
+					return user;
+				})
+			)
+			res.send(finalPayload);
+		} 
+		res.send(errors);
+	} catch (err){
+		console.log(err);
 	}
-	const finalPayload = payload.map(val=>{
-		let user = {};
-		user.Id = val.Id;
-		user.Username = val.Username;
-		user.Firstname = val.Firstname;
-		user.Lastname = val.Lastname;
-		user.FameRating = profile.calculateUserFame(val);
-		//age
-		user.Biography = val.Biography;
-		return user;
-	})
-	// console.log(req);
-	//Id
-	//Username
-	//Firstname
-	//Lastname
-	//Fame
-	//Age
-	//Bio
-	res.send(finalPayload);
 });
 
 router.post('/register', async (req, res) => {
@@ -52,17 +60,20 @@ router.post('/register', async (req, res) => {
 		res.send(data);
 });
 
+router.get('/verifyEmail', async (req, res)=> {
+	let Id = req.query.Id;
+	if (req.query.Id != null && req.query.VerifyKey != null)
+		profile.verifyUserEmail()
+})
+
 router.post('/login', async (req, res) => {
 	console.log(req.body);
 	let data = await profile.loginUser(req.body)
 	if (data != null && data.Id != null){
-		console.log(data);
-		res.send(data);
+		res.send(data.AccessToken);
 	}
 	res.send(data);
 });
-
-router.get(``)
 
 router.post('/updateUserProfile', async (req, res) => {
 	try {

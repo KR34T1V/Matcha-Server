@@ -92,7 +92,7 @@ async function insert(qry, varArray){
 			varArray.forEach(()=>{
 				values.push('?');
 			})
-			values = await buildQuery(values);
+			values = await buildQuery(values, ', ');
 			let request = `INSERT INTO ${config.USERS_TABLE} (${qry}) VALUES (${values})`;
 			// console.log(request);
 			console.log(varArray);
@@ -142,14 +142,14 @@ async function findUsername(user){
 	}
 }
 
-async function buildQuery(queryArray){
+async function buildQuery(queryArray, separator){
 	let request = null;
 
 	if (queryArray == null)
 		return(null);
 	queryArray.forEach((elem, i)=>{
 		if (i > 0)
-			request = request + ', ';
+			request = request + separator;
 		if (request == null)
 			request = elem;
 		else

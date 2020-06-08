@@ -8,10 +8,8 @@ const moment = require ('moment');
 start();
 
 async function start(){
-	let user = await sql.findId(1);
-	if (user != null)
-		calculateUserAge(user);
 	// await gen.generateUsers(10);
+	// likealot(45, 21);
 	// console.log(await findIds([1,2,3,4,5,6]));
 	// console.log(await viewUser(1, 6));
 
@@ -217,7 +215,7 @@ async function updateUserProfile(user){
 				}
 			}
 			if (errors.length == 0){
-				request = await sql.buildQuery(build);
+				request = await sql.buildQuery(build, ', ');
 				if (await sql.updateUser(user.Id, request, form))
 					return user;
 				errors.push('An Unexpected Error Occured Please Try Again Later...');
@@ -529,17 +527,17 @@ async function calculateUserFame(user){
 	let fame = 0;
 	if (user != null)
 		if (user.ViewedBy != null && user.LikedBy != null)
-			fame = (users.LikedBy.length/users.ViewedBy.length)*100;
+			fame = (user.LikedBy.length/user.ViewedBy.length)*100;
 	return (fame);
 }
 
 async function calculateUserAge(user){
 	let today = moment().format("YYYY");
-	let age;
+	let age = 0;
 	if (user != null){
 		age = parseInt(today) - parseInt(moment(user.Birthdate).format("YYYY"));
-		console.log (age);
 	}
+	return(age);
 }
 
 module.exports = {
@@ -551,8 +549,10 @@ module.exports = {
 	viewUser,
 	loginUser,
 	registerUser,
+	verifyUserEmail,
 	findIds,
 	newAccessToken,
 	verifyAccessToken,
-	calculateUserFame
+	calculateUserFame,
+	calculateUserAge
 }

@@ -10,7 +10,7 @@ function verifyEmail(email, id, username, key){
 	Dear ${username},
 	Please use the following link to verify your Matcha account:
 	
-	http://localhost:3000/users/verify?id=${id}&key=${key}
+	http://localhost:3000/users/verify?Id=${id}&VerifyKey=${key}
 
 	Regards,
 	Matcha Team
@@ -20,7 +20,7 @@ function verifyEmail(email, id, username, key){
 	Dear <strong>${username}<strong>,
 	<p>Please use the following link to verify your Matcha account:</p><br/>
 
-	<h4><a href="http://localhost:3000/users/verify?id=${id}&key=${key}">Click Me..</a></h4>
+	<h4><a href="http://localhost:3000/users/verify?Id=${id}&VerifyKey=${key}">Click Me Baby..</a></h4>
 
 	<p>Regards,</p>
 	<p>Matcha Team</p>
@@ -29,7 +29,7 @@ function verifyEmail(email, id, username, key){
 	return (sendMail(from, to, subject, bodyText, bodyHtml));
 }
 
-function resetEmail(email, username, key){
+function resetEmail(email, id, username, key){
 	let from = '"Matcha" <Reset@matcha.com>';
 	let to = email;
 	let subject = `${username} Password Reset Key.`;
@@ -42,7 +42,7 @@ function resetEmail(email, username, key){
 
 	or use this link:
 
-	http://localhost:3000/users/reset?email=${email}&key=${key}
+	http://localhost:3000/users/reset?Id=${id}&VerifyKey=${key}
 
 	Regards,
 	Matcha Team
@@ -56,7 +56,7 @@ function resetEmail(email, username, key){
 
 	<p>or use this link:</p>
 
-	<h4><a href="http://localhost:3000/users/reset?email=${email}&key=${key}">Click Me..</a></h4>
+	<h4><a href="http://localhost:3000/users/reset?Id=${id}&VerifyKey=${key}">Click Me Baby..</a></h4>
 
 	<p>Regards,</p>
 	<p>Matcha Team</p>

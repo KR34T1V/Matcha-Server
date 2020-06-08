@@ -1,6 +1,5 @@
 const sql = require('./SQLSchema');
 const bcrypt = require('bcryptjs');
-const moment = require ('moment');
 
 async function generateUsers(amount){
 	try{
@@ -8,6 +7,8 @@ async function generateUsers(amount){
 		let request;
 		while (count++ < amount){
 			let user = []
+			//accesstoken
+			user.push (await generateAccessToken());
 			//username	
 			user.push (await generateUsername());
 			//firstname
@@ -29,7 +30,7 @@ async function generateUsers(amount){
 			//interests
 			user.push (JSON.stringify(await gererateInterests(5)));
 			//viewed by
-			user.push (JSON.stringify(await generateViews(getRandomInt(1,1), amount)));
+			user.push (JSON.stringify(await generateViews(getRandomInt(1,amount*5), amount)));
 			//location		
 			user.push (JSON.stringify(await generateLocation()));
 			//dateverified
@@ -39,7 +40,7 @@ async function generateUsers(amount){
 			//other images
 			user.push(JSON.stringify(await generateImageArray(5)));
 	
-			request = `Username, Firstname, Lastname, Birthdate, Gender, SexualPreference, Email, Password, Biography, Interests, ViewedBy, Location, DateVerified, Avatar, Images`;
+			request = `AccessToken, Username, Firstname, Lastname, Birthdate, Gender, SexualPreference, Email, Password, Biography, Interests, ViewedBy, Location, DateVerified, Avatar, Images`;
 	
 			await sql.insert(request, user);
 		}
@@ -83,7 +84,7 @@ function generateLastname (){
 }
 
 function generateBirthdate(){
-	return (new Date(getRandomInt(1900, 2020), getRandomInt(0,11),getRandomInt(0,30)));
+	return (new Date(getRandomInt(1900, 2002), getRandomInt(0,11),getRandomInt(0,30)));
 }
 
 function generateGender(){
@@ -135,7 +136,7 @@ function generateViews(n, maxUsers){
 	let views = [];
 	let i = 0;	
 	while (i++ <= n){
-		views.push(getRandomInt(0, maxUsers))
+		views.push(getRandomInt(1, maxUsers))
 	}
 	return (views);
 }
@@ -159,6 +160,10 @@ function generateLocation(){
 		Longitude: longitude,
 		Timestamp: timestamp
 	})
+}
+
+async function generateAccessToken(){
+	return await bcrypt.genSalt(1);
 }
 
 module.exports = {
