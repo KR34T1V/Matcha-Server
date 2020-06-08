@@ -10,7 +10,7 @@ function verifyEmail(email, id, username, key){
 	Dear ${username},
 	Please use the following link to verify your Matcha account:
 	
-	http://localhost:3000/users/verify?Id=${id}&VerifyKey=${key}
+	http://localhost:3000/verifyEmail?Id=${id}&VerifyKey=${key}
 
 	Regards,
 	Matcha Team
@@ -20,7 +20,7 @@ function verifyEmail(email, id, username, key){
 	Dear <strong>${username}<strong>,
 	<p>Please use the following link to verify your Matcha account:</p><br/>
 
-	<h4><a href="http://localhost:3000/users/verify?Id=${id}&VerifyKey=${key}">Click Me Baby..</a></h4>
+	<h4><a href="http://localhost:3000/verifyEmail?Id=${id}&VerifyKey=${key}">Click Me Baby..</a></h4>
 
 	<p>Regards,</p>
 	<p>Matcha Team</p>
@@ -36,13 +36,9 @@ function resetEmail(email, id, username, key){
 	//Text************************************************************************************
 	let bodyText = `
 	Dear ${username},
-	Please use the following key to change your password:
+	Please use the following link to change your password:
 	
-	${key} 
-
-	or use this link:
-
-	http://localhost:3000/users/reset?Id=${id}&VerifyKey=${key}
+	http://localhost:3000/resetPassword?Id=${id}&VerifyKey=${key}
 
 	Regards,
 	Matcha Team
@@ -50,13 +46,9 @@ function resetEmail(email, id, username, key){
 	//HTML************************************************************************************
 	let bodyHtml = `
 	Dear <strong>${username}<strong>,
-	<p>Please use the following key to change your password:</p><br/>
+	<p>Please use the following link to change your password:</p><br/>
 	
-	<h4>${key}</h4> 
-
-	<p>or use this link:</p>
-
-	<h4><a href="http://localhost:3000/users/reset?Id=${id}&VerifyKey=${key}">Click Me Baby..</a></h4>
+	<h4><a href="http://localhost:3000/resetPassword?Id=${id}&VerifyKey=${key}">Click Me Baby..</a></h4>
 
 	<p>Regards,</p>
 	<p>Matcha Team</p>

@@ -98,10 +98,26 @@ router.get('/getProfileViews', async (req, res)=>{
 	console.log(await profile.findIds([]));
 })
 
-router.get('/resetUserPassword', async (req, res) => {
+router.get('/resetPassword', async (req, res) => {
+	console.log(req.query);
+	if (req.query != null && req.query.Email != null){
+		let result = await profile.resetUserPassword(req.query.Email);
+		//success
+		if (result == null)
+			res.send("Success");
+		else
+			res.send(result);
+	}
 });
 
-router.get('/changeUserPassword', async (req, res) => {
+router.get('/changePassword', async (req, res) => {
+	let input = req.query;
+	let result = await profile.changeUserPassword(input.Id,
+		input.Password, input.RePassword, input.VerifyKey);
+	if (result ==null)
+		res.send("Success");
+	else
+		res.send(result);
 });
 
 router.get('/deleteUser', async (req, res) => {

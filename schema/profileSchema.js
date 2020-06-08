@@ -189,7 +189,7 @@ async function updateUserProfile(user){
 				else {
 					//Create new key
 					user.VerifyKey = await bcrypt.genSalt(1);
-					mail.verifyEmail(user.NewEmail, user.Username, user.VerifyKey);
+					mail.verifyEmail(user.NewEmail, user.Id, user.Username, user.VerifyKey);
 					//Unverify
 					//Set New Email
 					build.push('NewEmail=?');
@@ -255,27 +255,31 @@ async function verifyUserEmail(id, key){
 }
 
 //returns the modified user on success, array of errors on failure
-async function resetUserPassword(user){
-	
-
+async function resetUserPassword(email){
 	try {
 		let errors = [];
-		if ( user == null || user.Id == null)
+		if (email == null)
 			return(['Fields are not valid']);
-		let key = await bcrypt.genSalt(1);
-		let request = `VerifyKey=?`;
-		let data = await sql.updateUser(User.Id, request, [ key ]);
-		if (!data)
+		let user = await sql.findEmail(email);
+		if (user != null && user.Id != null){
+			let key = await bcrypt.genSalt(1);
+			let request = `VerifyKey=?`;
+			let data = await sql.updateUser(user.Id, request, [ key ]);
+			if (!data)
+				errors.push('Failed to reset password');
+			else {
+				user.VerifyKey = key;
+				mail.resetEmail(user.Email,user.Id, user.Username, key);
+			}
+			if (errors.length == 0){
+				return (null);
+			}
+			else
+				return (errors);
+		} else {
 			errors.push('Account was not found');
-		else {
-			user.VerifyKey = key;
-			mail.resetEmail(user.Email, user.Username, key);
-		}
-		if (errors.length == 0){
-			return (user);
-		}
-		else
 			return (errors);
+		}
 	} catch (err){
 		console.log(err);
 		//mail error
@@ -285,35 +289,32 @@ async function resetUserPassword(user){
 }
 
 //returns the modified user on success, array of errors on failure
-async function changeUserPassword(user){
-	//REMOVE THESE DEV VALUES
-	user.Password = "ILikeApples123!";
-	user.RePassword = "ILikeApples123!";
-	//REMOVE THESE DEV VALUES
-
+async function changeUserPassword(id, password, repassword, key){
 	let errors = [];
 	try {
-		if ( user == null || user.Id == null || user.Password == null || user.RePassword == null)
+		if ( id == null || password == null || repassword == null || key == null)
 			return(['Fields are not valid']);							
-		if (!verify.checkPassword(user.Password))
+		if (!verify.checkPassword(password))
 			errors.push('Password must contain: \'uppercase\', \'lowercase\', \'numeric\', \'special\' & at least 8 characters');
-		if (!verify.checkRePassword(user.Password, user.RePassword))
+		if (!verify.checkRePassword(password, repassword))
 			errors.push('Passwords do not match');
 		//check verification key
-		let data  = await sql.findId(user.Id);
-		if (data != null)
-			if (data.VerifyKey != user.VerifyKey)
+		let data  = await sql.findId(id);
+		if (data != null){
+			if (data.VerifyKey != key)
 				errors.push("Key mismatch");
-		else
+		} else{
 			errors.push("Unknown User");
+		}
 		//set password
 		if (errors.length == 0){
-			let hash = await bcrypt.hash(user.Password, 6);
+			let hash = await bcrypt.hash(password, 6);
 			let request = `Password=?, VerifyKey=?`
-			data = sql.updateUser(User.Id, request, [hash, null])
+			data = sql.updateUser(id, request, [hash, null])
 			if (data){
-				user.Password = hash;
-				return(user);
+				password = hash;
+				console.log(`${id} changed password`);
+				return(null);
 			} else {
 				errors.push('An unexpected error occured please try again later...');
 			}
