@@ -76,8 +76,9 @@ router.post('/login', async (req, res) => {
 	let data = await profile.loginUser(req.body)
 	if (data != null && data.Id != null){
 		res.send(data.AccessToken);
+	} else {
+		res.send(data);
 	}
-	res.send(data);
 });
 
 router.post('/updateUserProfile', async (req, res) => {
