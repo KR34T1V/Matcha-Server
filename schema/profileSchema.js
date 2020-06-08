@@ -121,6 +121,11 @@ async function loginUser(user){
 
 }
 
+//returns 1 on success 0 on failure
+async function logoutUser(token){
+	return(await destroyAccessToken(token));
+}
+
 //returns the modified user on success, array of errors on failure
 async function updateUserProfile(user){
 	let errors = [];
@@ -228,7 +233,7 @@ async function updateUserProfile(user){
 	}
 }
 
-//returns boolean value 1 on success 0 on failure
+//returns null on success, array of errors on failure
 async function verifyUserEmail(id, key){
 	let res;
 	let errors = [];
@@ -247,14 +252,14 @@ async function verifyUserEmail(id, key){
 			[data.Email, data.NewEmail, data.VerifyKey, data.DateVerified] );
 			if (res == 1){
 				console.log(`${id} verified email`);
-				return(1)
+				return(null);
 			} else errors.push("Failed to verify");
 		} else errors.push("VerifyKey mismatch");
 	}
 	return (errors);
 }
 
-//returns the modified user on success, array of errors on failure
+//returns null on success, array of errors on failure
 async function resetUserPassword(email){
 	try {
 		let errors = [];
@@ -288,7 +293,7 @@ async function resetUserPassword(email){
 	}
 }
 
-//returns the modified user on success, array of errors on failure
+//returns null on success, array of errors on failure
 async function changeUserPassword(id, password, repassword, key){
 	let errors = [];
 	try {
@@ -403,7 +408,7 @@ async function likeUser(id, profileId){
 		console.log(err);
 	}
 }
-
+//returns user matching profileId, or null
 async function viewUser(id, profileId){
 	try {
 		if (id != null && profileId != null){
@@ -489,8 +494,9 @@ async function newAccessToken(id, token){
 		if (id != null && token != null){
 			let data = await sql.findId(id);
 			if (data != null){
-				let request = `AccessToken=?`;
-				let res = sql.updateUser(id, request, [token]);
+				let date = new Date();
+				let request = `AccessToken=?, AccessTime=?`;
+				let res = sql.updateUser(id, request, [token, date]);
 				if (res != null)
 					return(1);
 			}
@@ -511,6 +517,23 @@ async function verifyAccessToken(token){
 				return (res);
 		return (null);
 	} catch (err){
+		console.log(err);
+	}
+}
+
+async function destroyAccessToken(token){
+	try{
+		if (token == null)
+			return(['Fields are not valid']);
+		let res = await sql.findAccessToken(token);
+		if (res != null && res.AccessToken != null){
+			let request = `AccessToken=?`
+			res = await sql.updateUser(res.Id, request, [null])
+			if (res == 1)
+				return (1);
+		}
+		return (0);
+	}catch (err){
 		console.log(err);
 	}
 }
@@ -540,6 +563,7 @@ module.exports = {
 	updateUserProfile,
 	viewUser,
 	loginUser,
+	logoutUser,
 	registerUser,
 	verifyUserEmail,
 	findIds,

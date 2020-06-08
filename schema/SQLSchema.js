@@ -1,6 +1,7 @@
 const mysql = require('mysql');
 const config = require('../config');
 const util = require('util');
+const moment = require('moment');
 
 const con = mysql.createConnection({
 	host: config.MY_SQL_HOST,
@@ -61,6 +62,8 @@ async function newUser(user){
 		if ((result = await findEmail(user.Email))){
 			return null;
 		}else {
+			user.AccessTime = new Date();
+			console.log(user.AccessTime);
 			result = await insertUser(user);
 			console.log(`User added -> ${user.Username}`)
 			return (result);
@@ -74,7 +77,8 @@ async function newUser(user){
 async function updateUser(id, qry, varArray){
 	try{
 		if (id != null && qry != null && varArray != null){
-			let request = `UPDATE ${config.USERS_TABLE} SET ${qry} WHERE Id=? AND DateDeleted IS NULL`;
+			let request = `UPDATE ${config.USERS_TABLE} SET ${qry}, DateModified=? WHERE Id=? AND DateDeleted IS NULL`;
+			varArray.push(new Date());
 			varArray.push(id);
 			await query(request, varArray);
 			return (1);
@@ -199,10 +203,10 @@ async function insertUser(user){
 	//this has no security checks
 	try{
 		let request = `INSERT INTO ${config.USERS_TABLE} 
-		(Username, Firstname, Lastname, Birthdate, Gender, SexualPreference, NewEmail,
-		VerifyKey, Password) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+		(AccessTime, Username, Firstname, Lastname, Birthdate, Gender, SexualPreference, NewEmail,
+		VerifyKey, Password) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 		console.log(user.VerifyKey);
-		let res = await query(request, [user.Username, user.Firstname, user.Lastname, 
+		let res = await query(request, [user.AccessTime, user.Username, user.Firstname, user.Lastname, 
 			user.Birthdate, user.Gender, user.SexualPreference, user.NewEmail, user.VerifyKey, user.Password]);
 		return (user);
 	} catch (err) {

@@ -63,10 +63,9 @@ router.post('/register', async (req, res) => {
 router.get('/verifyEmail', async (req, res)=> {
 	if (req.query.Id != null && req.query.VerifyKey != null){
 		let result = await profile.verifyUserEmail(req.query.Id, req.query.VerifyKey);
-		if (result == 1){
+		if (result == null){
 			res.send("Success");
 		}
-		//return errors;
 		res.send(result);
 	} else res.send(["Oops, we had a little accident"]);
 })
@@ -80,6 +79,15 @@ router.post('/login', async (req, res) => {
 		res.send(data);
 	}
 });
+
+router.get('/logout', async (req, res) => {
+	try {
+		let data = req.query;
+		profile.logoutUser(data.AccessToken);
+	} catch (err){
+		console.log(err);
+	}
+})
 
 router.post('/updateUserProfile', async (req, res) => {
 	try {
