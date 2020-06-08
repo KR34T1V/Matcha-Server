@@ -4,11 +4,12 @@ const bcrypt = require('bcryptjs');
 const mail = require('./emailSchema');
 const gen = require('./generatorSchema');
 const moment = require ('moment');
+const config = require ('../config');
 
 start();
 
 async function start(){
-	// await gen.generateUsers(10);
+	// await gen.generateUsers(25);
 	// likealot(45, 21);
 	// console.log(await findIds([1,2,3,4,5,6]));
 	// console.log(await viewUser(1, 6));
@@ -513,8 +514,10 @@ async function verifyAccessToken(token){
 			return(['Fields are not valid']);
 		let res = await sql.findAccessToken(token);
 		if (res != null && res.AccessToken != null)
-			if (res.AccessToken === token)
-				return (res);
+			if (res.AccessToken === token){
+				if (await calculateDateDifference(new Date(), res.AccessTime) < config.ACCESS_EXPIRY_M);
+					return (res);
+			} 
 		return (null);
 	} catch (err){
 		console.log(err);
@@ -553,6 +556,12 @@ async function calculateUserAge(user){
 		age = parseInt(today) - parseInt(moment(user.Birthdate).format("YYYY"));
 	}
 	return(age);
+}
+
+async function calculateDateDifference(future, past){
+	var ms = moment(future,"DD/MM/YYYY HH:mm:ss").diff(moment(past,"DD/MM/YYYY HH:mm:ss"));
+	var d = moment.duration(ms);
+	return (d);
 }
 
 module.exports = {

@@ -24,7 +24,7 @@ router.get('/home', async (req, res) => {
 			} else errors.push("Invalid access token");
 		} else errors.push("Access token missing");
 		//build response
-		if (payload != null && errors.length > 0){
+		if (payload != null && errors.length == 0){
 			const finalPayload = await Promise.all(
 				payload.map(async val=>{
 					let user = {};
@@ -39,9 +39,9 @@ router.get('/home', async (req, res) => {
 					return user;
 				})
 			)
-			res.send(finalPayload);
-		} 
-		res.send(errors);
+			res.send(JSON.stringify({ data: finalPayload}));
+		} else 
+			res.send(JSON.stringify({ errors: errors }));
 	} catch (err){
 		console.log(err);
 	}
@@ -54,10 +54,12 @@ router.post('/register', async (req, res) => {
 			data = await sql.findEmail(req.body.Email)
 		if (data != null && data.Id != null){
 			console.log(`${data.Id} registered`);
-			res.send(data);
+			res.send(JSON.stringify({data: {
+				Result: "Success"
+			}}));
 		}
 	} else 
-		res.send(data);
+		res.send(JSON.stringify({errors: data}));
 });
 
 router.get('/verifyEmail', async (req, res)=> {
@@ -71,19 +73,31 @@ router.get('/verifyEmail', async (req, res)=> {
 })
 
 router.post('/login', async (req, res) => {
-	console.log(req.body);
 	let data = await profile.loginUser(req.body)
 	if (data != null && data.Id != null){
-		res.send(data.AccessToken);
+		
+		res.send(JSON.stringify({
+			data:{
+				AccessToken: data.AccessToken
+			}
+		}));
 	} else {
-		res.send(data);
+		res.send(JSON.stringify({
+			errors: data
+		}));
 	}
 });
 
 router.get('/logout', async (req, res) => {
 	try {
 		let data = req.query;
-		profile.logoutUser(data.AccessToken);
+		if (await profile.logoutUser(data.AccessToken)){
+			res.send(JSON.stringify({
+				data:{
+					Result: "Success"
+				}
+			}));
+		}
 	} catch (err){
 		console.log(err);
 	}

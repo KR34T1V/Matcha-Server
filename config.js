@@ -36,7 +36,7 @@ DateDeleted DATETIME
 
 //SECURITY REQUIREMENTS
 const PASSWORD_LENGTH = 8;
-const ACCESS_EXPIRY_TIME = 
+const ACCESS_EXPIRY_MS = 600000;
 
 module.exports = {
 	MY_SQL_HOST,
