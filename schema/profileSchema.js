@@ -410,7 +410,7 @@ async function likeUser(id, profileId){
 	}
 }
 //returns user matching profileId, or null
-async function viewUser(id, profileId){
+async function viewProfile(id, profileId){
 	try {
 		if (id != null && profileId != null){
 			let data = await sql.findId(profileId);
@@ -422,6 +422,7 @@ async function viewUser(id, profileId){
 					data.ViewedBy = JSON.parse(data.ViewedBy);
 
 				if (!data.ViewedBy.includes(id)){
+					//log view
 					data.ViewedBy.push(id);
 				}
 
@@ -570,14 +571,16 @@ module.exports = {
 	changeUserPassword,
 	resetUserPassword,
 	updateUserProfile,
-	viewUser,
+	viewProfile,
 	loginUser,
 	logoutUser,
 	registerUser,
 	verifyUserEmail,
 	findIds,
+	blockUser,
 	newAccessToken,
 	verifyAccessToken,
 	calculateUserFame,
-	calculateUserAge
+	calculateUserAge,
+	calculateDateDifference
 }

@@ -23,6 +23,13 @@ router.get('/home', async (req, res) => {
 				} else errors.push("Failed to get users");
 			} else errors.push("Invalid access token");
 		} else errors.push("Access token missing");
+		//sort goes here
+		if (payload != null && errors.length == 0){
+		}
+		//age
+		//location
+		//fame
+		//iterest ltags
 		//build response
 		if (payload != null && errors.length == 0){
 			const finalPayload = await Promise.all(
@@ -62,7 +69,7 @@ router.post('/register', async (req, res) => {
 		res.send(JSON.stringify({errors: data}));
 });
 
-router.get('/verifyEmail', async (req, res)=> {
+router.get('/verify/email', async (req, res)=> {
 	if (req.query.Id != null && req.query.VerifyKey != null){
 		let result = await profile.verifyUserEmail(req.query.Id, req.query.VerifyKey);
 		if (result == null){
@@ -103,24 +110,75 @@ router.get('/logout', async (req, res) => {
 	}
 })
 
-router.post('/updateUserProfile', async (req, res) => {
+router.get('/user/profile', async (req, res) => {
+	try{
+		if (req.query != null && req.query.AccessToken != null){
+			let user = await profile.verifyAccessToken(req.query.AccessToken);
+			if (user != null && user.Id != null){
+				res.send(JSON.stringify({
+					data: {
+						Username: user.Username,
+						Firstname: user.Firstname,
+						Lastname: user.Lastname,
+						Email: user.Email,
+						Gender: user.Gender,
+						SexualPreference: user.SexualPreference,
+						Avatar: user.Avatar,
+						Images: JSON.parse(user.Images),
+						Interests: user.Interests
+					}
+				}))
+				console.log(JSON.parse(user.Images));
+			} else 
+			res.send(JSON.stringify({
+				errors: ["Access Token Expired"]
+			}))
+		}
+	} catch(err){
+		console.log(err);
+	}
+})
+
+router.post('/user/updateProfile', async (req, res) => {
 	try {
 	}catch(err){
 		console.log (err);
 	}
 });
 
-router.post('/viewUser'), async (req, res) => {
+router.post('/view/Profile'), async (req, res) => {
 	console.log(req.body);
-	console.log(await profile.viewUser(1, 2));
+	console.log(await profile.viewProfile(1, 2));
 }
 
 router.get('/getProfileViews', async (req, res)=>{
-	console.log(req.body);
-	console.log(await profile.findIds([]));
+	let data = req.query;
+	let tmp_user = {};
+	let tmp;
+	let payload = [];
+	if (data != null && data.AccessToken != null){
+		let ret = await profile.verifyAccessToken(data.AccessToken);
+		if (ret != null && ret.Id != null){
+			let likes = JSON.parse(ret.LikedBy);
+			if (likes.length > 0){
+				likes.forEach(async (val)=>{
+					tmp = await sql.findId(val);
+					if (tmp != null && tmp.Id != null){
+						tmp_user.Id = tmp.Id;
+						tmp_user.Username = tmp.Username;
+						// tmp_user.Firstname = tmp.Firstname;
+						// tmp_user.Lastname = tmp.Lastname;
+						tmp_user.Fame = await profile.calculateUserFame(tmp);
+						payload.push(tmp_user);
+					}
+				})
+			}
+		} else res.send({errors: ["Invalid Access Token"]});
+	} else res.send({errors: ["Invalid Form"]});
+	res.send({data:payload});
 })
 
-router.get('/resetPassword', async (req, res) => {
+router.get('/user/resetPassword', async (req, res) => {
 	console.log(req.query);
 	if (req.query != null && req.query.Email != null){
 		let result = await profile.resetUserPassword(req.query.Email);
@@ -132,7 +190,7 @@ router.get('/resetPassword', async (req, res) => {
 	}
 });
 
-router.get('/changePassword', async (req, res) => {
+router.get('/user/changePassword', async (req, res) => {
 	let input = req.query;
 	let result = await profile.changeUserPassword(input.Id,
 		input.Password, input.RePassword, input.VerifyKey);
@@ -142,7 +200,7 @@ router.get('/changePassword', async (req, res) => {
 		res.send(result);
 });
 
-router.get('/deleteUser', async (req, res) => {
+router.get('/user/delete', async (req, res) => {
 	let userData = req.body;
 	let data;
 
@@ -154,7 +212,7 @@ router.get('/deleteUser', async (req, res) => {
 			res.send({'errors': data})
 });
 
-router.get('/likeUser', async (req, res) => {
+router.get('/user/like', async (req, res) => {
 	let userData = req.body;
 	let data;
 
