@@ -4,6 +4,7 @@ const router = express.Router();
 const profile = require(`../schema/profileSchema`);
 const sql = require('../schema/SQLSchema');
 const filter = require('../schema/filterSchema');
+const g = require('../schema/generalSchema');
 
 router.get('/home', async (req, res) => {
 	try {
@@ -162,37 +163,7 @@ router.get('/getProfileViews', async (req, res)=>{
 		if (ret != null && ret.Id != null){
 			let views = JSON.parse(ret.ViewedBy);
 			if (views != null && views.length > 0){
-				const finalPayload = await Promise.all(
-					views.forEach(async (val)=>{
-						tmp = await sql.findId(val);
-						if (tmp != null && tmp.Id != null){
-							tmp_user.Id = tmp.Id;
-							tmp_user.Username = tmp.Username;
-							// tmp_user.Firstname = tmp.Firstname;
-							// tmp_user.Lastname = tmp.Lastname;
-							tmp_user.Fame = await profile.calculateUserFame(tmp);
-							payload.push(tmp_user);
-						}
-					})
-				)
-				res.send({data:finalPayload});
-			}
-		} else res.send({errors: ["Invalid Access Token"]});
-	} else res.send({errors: ["Invalid Form"]});
-})
-
-router.get('/getProfileLikes', async (req, res)=>{
-	let data = req.query;
-	let tmp_user = {};
-	let tmp;
-	let payload = [];
-	if (data != null && data.AccessToken != null){
-		let ret = await profile.verifyAccessToken(data.AccessToken);
-		if (ret != null && ret.Id != null){
-			let likes = JSON.parse(ret.LikedBy);
-			console.log(likes);
-			if (likes != null && likes.length > 0){
-				likes.forEach(async (val)=>{
+				await g.asyncForEach(views, async (val)=>{
 					tmp = await sql.findId(val);
 					if (tmp != null && tmp.Id != null){
 						tmp_user.Id = tmp.Id;
@@ -200,12 +171,36 @@ router.get('/getProfileLikes', async (req, res)=>{
 						// tmp_user.Firstname = tmp.Firstname;
 						// tmp_user.Lastname = tmp.Lastname;
 						tmp_user.Fame = await profile.calculateUserFame(tmp);
-						console.log(tmp_user);
+						payload.push(tmp_user);
+					}
+				});
+			}
+			res.send({data:payload});
+		} else res.send({errors: ["Invalid Access Token"]});
+	} else res.send({errors: ["Invalid Form"]});
+})
+
+router.get('/getProfileLikes', async (req, res)=>{
+	let data = req.query;
+	let tmp;
+	let payload = [];
+	if (data != null && data.AccessToken != null){
+		let ret = await profile.verifyAccessToken(data.AccessToken);
+		if (ret != null && ret.Id != null){
+			let likes = JSON.parse(ret.LikedBy);
+			if (likes != null && likes.length > 0){
+				await g.asyncForEach(likes, async (val)=>{
+					let tmp_user = {};
+					tmp = await sql.findId(val);
+					if (tmp != null && tmp.Id != null){
+						tmp_user.Id = tmp.Id;
+						tmp_user.Username = tmp.Username;
+						tmp_user.Fame = await profile.calculateUserFame(tmp);
 						payload.push(tmp_user);
 					}
 				})
-				res.send(JSON.stringify({data:payload}));
 			}
+			res.send(JSON.stringify({data:payload}));
 		} else res.send(JSON.stringify({errors: ["Invalid Access Token"]}));
 	} else res.send(JSON.stringify({errors: ["Invalid Form"]}));
 })
