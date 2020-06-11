@@ -12,6 +12,7 @@ start();
 async function start(){
 	// await gen.generateUsers(25);
 	// likealot(45, 21);
+	// viewAlot(45, 21);
 	// console.log(await findIds([1,2,3,4,5,6]));
 	// console.log(await viewUser(1, 6));
 
@@ -23,10 +24,16 @@ async function start(){
 // 		console.log(user);
 // })
 //generates 'n' amount of likes between ids, 0 and maxUsers
-async function likealot(n, maxUsers){
+async function likeAlot(n, maxUsers){
 	let i = 0;
 	while (i++ <= n){
-		await likeUser(gen.getRandomInt(0, maxUsers), gen.getRandomInt(0, maxUsers));
+		await likeUser(gen.getRandomInt(1, maxUsers), gen.getRandomInt(1, maxUsers));
+	}
+}
+async function viewAlot(n, maxUsers){
+	let i = 0;
+	while (i++ <= n){
+		await viewProfile(gen.getRandomInt(1, maxUsers), gen.getRandomInt(1, maxUsers));
 	}
 }
 
@@ -430,8 +437,10 @@ async function viewProfile(id, profileId){
 				data.ViewedBy = JSON.stringify(data.ViewedBy);
 				let request = `ViewedBy=?`;
 				let res = await sql.updateUser(profileId, request, [data.ViewedBy]);
-				if (res == 1)
+				if (res == 1){
+					console.log(`${id} viewed ${profileId}`);
 					return (data);
+				}
 			}
 		}
 		return (null);

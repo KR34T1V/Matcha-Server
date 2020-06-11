@@ -155,7 +155,6 @@ router.post('/view/Profile'), async (req, res) => {
 
 router.get('/getProfileViews', async (req, res)=>{
 	let data = req.query;
-	let tmp_user = {};
 	let tmp;
 	let payload = [];
 	if (data != null && data.AccessToken != null){
@@ -164,12 +163,11 @@ router.get('/getProfileViews', async (req, res)=>{
 			let views = JSON.parse(ret.ViewedBy);
 			if (views != null && views.length > 0){
 				await g.asyncForEach(views, async (val)=>{
+					let tmp_user = {};
 					tmp = await sql.findId(val);
 					if (tmp != null && tmp.Id != null){
 						tmp_user.Id = tmp.Id;
 						tmp_user.Username = tmp.Username;
-						// tmp_user.Firstname = tmp.Firstname;
-						// tmp_user.Lastname = tmp.Lastname;
 						tmp_user.Fame = await profile.calculateUserFame(tmp);
 						payload.push(tmp_user);
 					}
