@@ -1,3 +1,4 @@
+"use strict"
 const express = require("express");
 const router = express.Router();
 const profile = require(`../schema/profileSchema`);
@@ -159,8 +160,38 @@ router.get('/getProfileViews', async (req, res)=>{
 	if (data != null && data.AccessToken != null){
 		let ret = await profile.verifyAccessToken(data.AccessToken);
 		if (ret != null && ret.Id != null){
+			let views = JSON.parse(ret.ViewedBy);
+			if (views != null && views.length > 0){
+				const finalPayload = await Promise.all(
+					views.forEach(async (val)=>{
+						tmp = await sql.findId(val);
+						if (tmp != null && tmp.Id != null){
+							tmp_user.Id = tmp.Id;
+							tmp_user.Username = tmp.Username;
+							// tmp_user.Firstname = tmp.Firstname;
+							// tmp_user.Lastname = tmp.Lastname;
+							tmp_user.Fame = await profile.calculateUserFame(tmp);
+							payload.push(tmp_user);
+						}
+					})
+				)
+				res.send({data:finalPayload});
+			}
+		} else res.send({errors: ["Invalid Access Token"]});
+	} else res.send({errors: ["Invalid Form"]});
+})
+
+router.get('/getProfileLikes', async (req, res)=>{
+	let data = req.query;
+	let tmp_user = {};
+	let tmp;
+	let payload = [];
+	if (data != null && data.AccessToken != null){
+		let ret = await profile.verifyAccessToken(data.AccessToken);
+		if (ret != null && ret.Id != null){
 			let likes = JSON.parse(ret.LikedBy);
-			if (likes.length > 0){
+			console.log(likes);
+			if (likes != null && likes.length > 0){
 				likes.forEach(async (val)=>{
 					tmp = await sql.findId(val);
 					if (tmp != null && tmp.Id != null){
@@ -169,13 +200,14 @@ router.get('/getProfileViews', async (req, res)=>{
 						// tmp_user.Firstname = tmp.Firstname;
 						// tmp_user.Lastname = tmp.Lastname;
 						tmp_user.Fame = await profile.calculateUserFame(tmp);
+						console.log(tmp_user);
 						payload.push(tmp_user);
 					}
 				})
+				res.send(JSON.stringify({data:payload}));
 			}
-		} else res.send({errors: ["Invalid Access Token"]});
-	} else res.send({errors: ["Invalid Form"]});
-	res.send({data:payload});
+		} else res.send(JSON.stringify({errors: ["Invalid Access Token"]}));
+	} else res.send(JSON.stringify({errors: ["Invalid Form"]}));
 })
 
 router.get('/user/resetPassword', async (req, res) => {

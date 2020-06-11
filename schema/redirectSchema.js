@@ -1,3 +1,4 @@
+"use strict"
 const Verify = function (req, res, next){
 	if (req.session.data && req.session.data.Username && req.session.data.NewEmail && !req.session.data.Verified)
 		return (res.redirect(`/users/verify?email=${req.session.data.NewEmail}`));

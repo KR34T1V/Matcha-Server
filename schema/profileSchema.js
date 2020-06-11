@@ -1,3 +1,4 @@
+"use strict"
 const sql = require('./SQLSchema');
 const verify = require('./verificationSchema');
 const bcrypt = require('bcryptjs');

@@ -1,3 +1,4 @@
+"use strict"
 async function preference(user, userArray){
 	if (user != null && user.Id != null && userArray != null){
 		//remove self from feedback

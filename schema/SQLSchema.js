@@ -1,3 +1,4 @@
+"use strict"
 const mysql = require('mysql');
 const config = require('../config');
 const util = require('util');
