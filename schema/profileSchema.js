@@ -11,29 +11,30 @@ start();
 
 async function start(){
 	// await gen.generateUsers(25);
-	// likealot(45, 21);
-	// viewAlot(45, 21);
+	// likeAlot(50, 25);
+	// viewAlot(25, 25);
 	// console.log(await findIds([1,2,3,4,5,6]));
 	// console.log(await viewUser(1, 6));
 
 }
-// likealot(50, 10);
-// sql.findId(494)
-// .then((user)=>{
-// 	if (user != null)
-// 		console.log(user);
-// })
+
 //generates 'n' amount of likes between ids, 0 and maxUsers
 async function likeAlot(n, maxUsers){
 	let i = 0;
 	while (i++ <= n){
-		await likeUser(gen.getRandomInt(1, maxUsers), gen.getRandomInt(1, maxUsers));
+		let user = gen.getRandomInt(1, maxUsers);
+		let profileId = gen.getRandomInt(1, maxUsers);
+		if (user != profileId)
+			await likeUser(user, profileId);
 	}
 }
 async function viewAlot(n, maxUsers){
 	let i = 0;
 	while (i++ <= n){
-		await viewProfile(gen.getRandomInt(1, maxUsers), gen.getRandomInt(1, maxUsers));
+		let user = gen.getRandomInt(1, maxUsers);
+		let profileId = gen.getRandomInt(1, maxUsers);
+		if (user != profileId)
+			await viewProfile(user, profileId);
 	}
 }
 
@@ -519,6 +520,7 @@ async function newAccessToken(id, token){
 	}
 }
 
+//returns userdata or an array of errors.
 async function verifyAccessToken(token){
 	try {
 		if (token == null)
@@ -526,10 +528,31 @@ async function verifyAccessToken(token){
 		let res = await sql.findAccessToken(token);
 		if (res != null && res.AccessToken != null)
 			if (res.AccessToken === token){
-				if (await calculateDateDifference(new Date(), res.AccessTime) < config.ACCESS_EXPIRY_M);
+				//check this date test
+				console.log(await calculateDateDifference(new Date(), res.AccessTime));
+				if (await calculateDateDifference(new Date(), res.AccessTime) < config.ACCESS_EXPIRY){
+					if (await renewAccessToken(res.Id))
+						console.log("token Renewed");
 					return (res);
+				}
+				return (['AccessToken Expired']);
 			} 
 		return (null);
+	} catch (err){
+		console.log(err);
+	}
+}
+
+async function renewAccessToken(id){
+	try{
+		if (id == null)
+			return(['Fields are not valid']);
+		let date = new Date();
+		let req = `AccessTime=?`;
+		let res = await sql.updateUser(id, req, [date]);
+		if (res == 1)
+			return (1);
+		return (0);
 	} catch (err){
 		console.log(err);
 	}
@@ -571,7 +594,7 @@ async function calculateUserAge(user){
 
 async function calculateDateDifference(future, past){
 	var ms = moment(future,"DD/MM/YYYY HH:mm:ss").diff(moment(past,"DD/MM/YYYY HH:mm:ss"));
-	var d = moment.duration(ms);
+	var d = moment.duration(ms).asSeconds();
 	return (d);
 }
 
