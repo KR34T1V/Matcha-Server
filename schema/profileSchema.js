@@ -79,7 +79,6 @@ async function registerUser(user){
 
 			await sql.newUser(form);
 			result = await sql.findEmail(form.NewEmail);
-			console.log(result)
 			if (result != null && result.Id != null){
 				mail.verifyEmail(result.NewEmail, result.Id, result.Username, result.VerifyKey);
 				return (null);
@@ -418,6 +417,7 @@ async function likeUser(id, profileId){
 		console.log(err);
 	}
 }
+
 //returns user matching profileId, or null
 async function viewProfile(id, profileId){
 	try {
@@ -497,7 +497,6 @@ async function blockUser(id, profileId){
 		}
 		return (null);
 	} catch (err){
-	blockUser(1, 2);
 	console.log(err);
 	}
 }
@@ -529,10 +528,8 @@ async function verifyAccessToken(token){
 		if (res != null && res.AccessToken != null)
 			if (res.AccessToken === token){
 				//check this date test
-				console.log(await calculateDateDifference(new Date(), res.AccessTime));
 				if (await calculateDateDifference(new Date(), res.AccessTime) < config.ACCESS_EXPIRY){
-					if (await renewAccessToken(res.Id))
-						console.log("token Renewed");
+					await renewAccessToken(res.Id)
 					return (res);
 				}
 				return (['AccessToken Expired']);

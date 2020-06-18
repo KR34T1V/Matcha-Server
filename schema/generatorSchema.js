@@ -10,6 +10,8 @@ async function generateUsers(amount){
 			let user = []
 			//accesstoken
 			user.push (await generateAccessToken());
+			//accesstime
+			user.push (await new Date());
 			//username	
 			user.push (await generateUsername());
 			//firstname
@@ -41,7 +43,7 @@ async function generateUsers(amount){
 			//other images
 			user.push(JSON.stringify(await generateImageArray(5)));
 	
-			request = `AccessToken, Username, Firstname, Lastname, Birthdate, Gender, SexualPreference, Email, Password, Biography, Interests, ViewedBy, Location, DateVerified, Avatar, Images`;
+			request = `AccessToken, AccessTime, Username, Firstname, Lastname, Birthdate, Gender, SexualPreference, Email, Password, Biography, Interests, ViewedBy, Location, DateVerified, Avatar, Images`;
 	
 			await sql.insert(request, user);
 		}

@@ -5,6 +5,7 @@ const profile = require(`../schema/profileSchema`);
 const sql = require('../schema/SQLSchema');
 const filter = require('../schema/filterSchema');
 const g = require('../schema/generalSchema');
+const { verifyAccessToken } = require("../schema/profileSchema");
 
 router.get('/home', async (req, res) => {
 	try {
@@ -148,10 +149,33 @@ router.post('/user/updateProfile', async (req, res) => {
 	}
 });
 
-router.post('/view/Profile'), async (req, res) => {
-	console.log(req.body);
-	console.log(await profile.viewProfile(1, 2));
-}
+router.get('/view/profile', async (req, res) => {
+	let AccessToken = req.query.AccessToken;
+	let ProfileId = req.query.ProfileId;
+	console.log(req.query);
+	let user = await verifyAccessToken(AccessToken);
+	if (user != null && user.Id != null){
+		let result = await profile.viewProfile(user.Id, ProfileId);
+		if (result != null && result.Id != null){
+			res.send(JSON.stringify({data:
+			{
+				Username: result.Username,
+				Firstname: result.Firstname,
+				Lastname: result.Lastname,
+				Gender: result.Gender,
+				SexualPreference: result.SexualPreference,
+				Age: profile.calculateUserAge(result),
+				Biography: result.Biography,
+				Interests: result.Interests,
+				Location: JSON.parse(result.Location),
+				Fame: profile.calculateUserFame(result),
+				Avatar: result.Avatar,
+				Images: JSON.parse(result.Images),
+				LastOnline: result.AccessTime
+			}}));
+		}
+	}
+})
 
 router.get('/getProfileViews', async (req, res)=>{
 	let data = req.query;

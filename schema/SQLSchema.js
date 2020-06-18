@@ -199,7 +199,23 @@ async function findAccessToken(token){
 	}
 }
 
+async function stripHTML(string){
+	console.log(string);
+	if (string != null && string.length > 0){
+		// Remove style tags and content
+		string.replace(/<style[^>]*>.*<\/style>/gm, '')
+		// Remove script tags and content
+		.replace(/<script[^>]*>.*<\/script>/gm, '')
+		// Remove all opening, closing and orphan HTML tags
+		.replace(/<[^>]+>/gm, '')
+		// Remove leading spaces and repeated CR/LF
+		.replace(/([\r\n]+ +)+/gm, '');
+	}
+	return (string);
+}
+
 //SUBMODULES
+
 async function insertUser(user){
 	//this has no security checks
 	try{
@@ -227,5 +243,6 @@ module.exports = {
 	findId,
 	findUsername,
 	buildQuery,
-	findAccessToken
+	findAccessToken,
+	stripHTML
 }
