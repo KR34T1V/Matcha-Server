@@ -90,10 +90,10 @@ router.post('/verifyEmail/email', async (req, res) => {
 router.post('/login', async (req, res) => {
 	let data = await profile.loginUser(req.body)
 	if (data != null && data.Id != null){
-		
 		res.send(JSON.stringify({
 			data:{
-				AccessToken: data.AccessToken
+				AccessToken: data.AccessToken,
+				Verified: data.DateVerified ? true:false
 			}
 		}));
 	} else {
