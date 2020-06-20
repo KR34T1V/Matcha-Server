@@ -5,7 +5,6 @@ const profile = require(`../schema/profileSchema`);
 const sql = require('../schema/SQLSchema');
 const filter = require('../schema/filterSchema');
 const g = require('../schema/generalSchema');
-const { verifyAccessToken } = require("../schema/profileSchema");
 
 router.get('/home', async (req, res) => {
 	try {
@@ -72,14 +71,20 @@ router.post('/register', async (req, res) => {
 		res.send(JSON.stringify({errors: data}));
 });
 
-router.get('/verify/email', async (req, res)=> {
-	if (req.query.Id != null && req.query.VerifyKey != null){
+router.post('/verifyEmail', async (req, res)=> {
+	if (req.body != null && req.body.Id != null && req.body.VerifyKey != null){
 		let result = await profile.verifyUserEmail(req.query.Id, req.query.VerifyKey);
 		if (result == null){
 			res.send("Success");
 		}
 		res.send(result);
 	} else res.send(["Oops, we had a little accident"]);
+})
+
+router.post('/verifyEmail/email', async (req, res) => {
+	if (req.body != null && req.body.Email != null){
+		await profile.resendVerifyEmail(Email);
+	}
 })
 
 router.post('/login', async (req, res) => {
@@ -153,7 +158,7 @@ router.get('/view/profile', async (req, res) => {
 	let AccessToken = req.query.AccessToken;
 	let ProfileId = req.query.ProfileId;
 	console.log(req.query);
-	let user = await verifyAccessToken(AccessToken);
+	let user = await profile.verifyAccessToken(AccessToken);
 	if (user != null && user.Id != null){
 		let result = await profile.viewProfile(user.Id, ProfileId);
 		if (result != null && result.Id != null){
@@ -227,10 +232,10 @@ router.get('/getProfileLikes', async (req, res)=>{
 	} else res.send(JSON.stringify({errors: ["Invalid Form"]}));
 })
 
-router.get('/user/resetPassword', async (req, res) => {
-	console.log(req.query);
-	if (req.query != null && req.query.Email != null){
-		let result = await profile.resetUserPassword(req.query.Email);
+router.post('/user/passwordReset', async (req, res) => {
+	console.log(req.body);
+	if (req.body != null && req.body.Email != null){
+		let result = await profile.resetUserPassword(req.body.Email);
 		//success
 		if (result == null)
 			res.send("Success");
@@ -238,6 +243,30 @@ router.get('/user/resetPassword', async (req, res) => {
 			res.send(result);
 	}
 });
+
+router.post('/user/passwordReset/email', async (req, res) => {
+	try {
+		if (req.body != null && req.body.Email != null){
+			const email = req.body.Email;
+			let data = await profile.resetPasswordEmail(email);
+			if (data == null){
+				res.send(JSON.stringify({ data: {
+					result: "Success",
+				}}));
+			} else {
+				res.send(JSON.stringify({ data: {
+					errors: data 
+				}}))
+			}
+		} else {
+			res.send(JSON.stringify({ data: {
+				errors: ["Oops something went wrong!"],
+			}}));
+		}
+	} catch (err){
+		console.log(err);
+	}
+})
 
 router.get('/user/changePassword', async (req, res) => {
 	let input = req.query;

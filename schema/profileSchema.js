@@ -28,6 +28,7 @@ async function likeAlot(n, maxUsers){
 			await likeUser(user, profileId);
 	}
 }
+
 async function viewAlot(n, maxUsers){
 	let i = 0;
 	while (i++ <= n){
@@ -73,7 +74,7 @@ async function registerUser(user){
 			form.Birthdate = user.Birthdate;
 			form.Gender = user.Gender;
 			form.SexualPreference = user.SexualPreference;
-			form.NewEmail = user.Email
+			form.NewEmail = user.Email;
 			form.Password = await bcrypt.hash(user.Password, 6);
 			form.VerifyKey = await bcrypt.genSalt(1);
 
@@ -263,13 +264,21 @@ async function verifyUserEmail(id, key){
 				console.log(`${id} verified email`);
 				return(null);
 			} else errors.push("Failed to verify");
-		} else errors.push("VerifyKey mismatch");
+		} else errors.push("Key mismatch");
 	}
 	return (errors);
 }
 
+async function resendVerifyEmail(email){
+	let user = await sql.findEmail(email);
+	if (user != null && user.Id != null){
+		await mail.verifyEmail(email, user.Id, user.Username, user.VerifyKey)
+		return (null);
+	} else return(["Account not found"]);
+}
+
 //returns null on success, array of errors on failure
-async function resetUserPassword(email){
+async function resetPasswordEmail(email){
 	try {
 		let errors = [];
 		if (email == null)
@@ -283,7 +292,7 @@ async function resetUserPassword(email){
 				errors.push('Failed to reset password');
 			else {
 				user.VerifyKey = key;
-				mail.resetEmail(user.Email,user.Id, user.Username, key);
+				mail.resetEmail(email, user.Id, user.Username, key);
 			}
 			if (errors.length == 0){
 				return (null);
@@ -291,7 +300,7 @@ async function resetUserPassword(email){
 			else
 				return (errors);
 		} else {
-			errors.push('Account was not found');
+			errors.push('Account not found');
 			return (errors);
 		}
 	} catch (err){
@@ -303,7 +312,7 @@ async function resetUserPassword(email){
 }
 
 //returns null on success, array of errors on failure
-async function changeUserPassword(id, password, repassword, key){
+async function resetUserPassword(email, password, repassword, key){
 	let errors = [];
 	try {
 		if ( id == null || password == null || repassword == null || key == null)
@@ -313,7 +322,7 @@ async function changeUserPassword(id, password, repassword, key){
 		if (!verify.checkRePassword(password, repassword))
 			errors.push('Passwords do not match');
 		//check verification key
-		let data  = await sql.findId(id);
+		let data  = await sql.findEmail(email);
 		if (data != null){
 			if (data.VerifyKey != key)
 				errors.push("Key mismatch");
@@ -598,14 +607,15 @@ async function calculateDateDifference(future, past){
 module.exports = {
 	likeUser,
 	deleteUser,
-	changeUserPassword,
 	resetUserPassword,
+	resetPasswordEmail,
 	updateUserProfile,
 	viewProfile,
 	loginUser,
 	logoutUser,
 	registerUser,
 	verifyUserEmail,
+	resendVerifyEmail,
 	findIds,
 	blockUser,
 	newAccessToken,

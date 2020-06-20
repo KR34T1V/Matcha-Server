@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 
 async function generateUsers(amount){
 	try{
+		let res;
 		let count = 0;
 		let request;
 		while (count++ < amount){
@@ -45,8 +46,9 @@ async function generateUsers(amount){
 	
 			request = `AccessToken, AccessTime, Username, Firstname, Lastname, Birthdate, Gender, SexualPreference, Email, Password, Biography, Interests, ViewedBy, Location, DateVerified, Avatar, Images`;
 	
-			await sql.insert(request, user);
+			res = await sql.insert(request, user);
 		}
+		console.log(`${amount} users generated`);
 	} catch (err){
 		console.log(err);
 	}
