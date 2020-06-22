@@ -7,7 +7,7 @@ async function generateUsers(amount){
 		let res;
 		let count = 0;
 		let request;
-		while (count++ < amount){
+		while (count++ <= amount){
 			let user = []
 			//accesstoken
 			user.push (await generateAccessToken());
@@ -168,7 +168,7 @@ function generateLocation(){
 }
 
 async function generateAccessToken(){
-	return await bcrypt.genSalt(1);
+	return await gen.getRandomInt(10000, 99999);
 }
 
 module.exports = {

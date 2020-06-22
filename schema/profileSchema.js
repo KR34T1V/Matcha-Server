@@ -48,7 +48,7 @@ async function registerUser(user){
 		if (user.Username == null || user.Firstname == null || user.Lastname == null ||
 			user.Birthdate == null || user.Gender == null || user.SexualPreference == null ||
 			user.Email == null || user.Password == null || user.RePassword == null)
-			errors.push(['Fields are not valid']);
+			return([config.MSG_FORM_INVALID]);
 		if (!verify.checkUserName(user.Username))
 			errors.push('Username may not contain special characters');
 		if (!verify.checkNames(user.Firstname) || !verify.checkNames(user.Lastname))
@@ -76,12 +76,12 @@ async function registerUser(user){
 			form.SexualPreference = user.SexualPreference;
 			form.NewEmail = user.Email;
 			form.Password = await bcrypt.hash(user.Password, 6);
-			form.VerifyKey = await bcrypt.genSalt(1);
+			form.VerifyKey = gen.getRandomInt(10000, 99999);
 
 			await sql.newUser(form);
 			result = await sql.findEmail(form.NewEmail);
 			if (result != null && result.Id != null){
-				mail.verifyEmail(result.NewEmail, result.Id, result.Username, result.VerifyKey);
+				mail.verifyEmail(result.NewEmail, result.Username, result.VerifyKey);
 				return (null);
 			} else errors.push('Email is already in use');
 		}
@@ -99,7 +99,7 @@ async function loginUser(user){
 	let errors = [];
 	try {
 		if (user == null || user.Email == null || user.Password == null)
-			return (['Fields are not valid']);
+			return([config.MSG_FORM_INVALID]);
 		let data = await sql.findEmail(user.Email);
 		if (data == null && user.NewEmail != null)
 			data = await sql.findEmail(user.NewEmail);
@@ -136,6 +136,123 @@ async function logoutUser(token){
 	return(await destroyAccessToken(token));
 }
 
+//returns null on success, array of errors on failure
+async function verifyUserEmail(email, key){
+	let res;
+	let errors = [];
+	if (email == null || key == null)
+		return([config.MSG_FORM_INVALID]);
+	let data = await sql.findEmail(email);
+	if (data.DateVerified != null)
+		return (null);
+	if (data != null && data.VerifyKey != null){
+		//verify
+		if (key == data.VerifyKey && data.NewEmail != null){
+			data.VerifyKey = null;
+			data.DateVerified = new Date();
+			data.Email = data.NewEmail;
+			data.NewEmail = null;
+			let request = `Email=?, NewEmail=?, VerifyKey=?, DateVerified=?`
+			res = await sql.updateUser(data.Id, request,
+			[data.Email, data.NewEmail, data.VerifyKey, data.DateVerified] );
+			if (res == 1){
+				console.log(`${email} verified email`);
+				return(null);
+			} else errors.push("Failed to verify");
+		} else errors.push("Key mismatch");
+	} else errors.push("An error occured, please retry the verification proccess");
+	return (errors);
+}
+
+async function resendVerifyEmail(email){
+	if (email != null && email.length > 0)
+		return([config.MSG_FORM_INVALID]);
+	let user = await sql.findEmail(email);
+	if (user != null && user.Id != null){
+		if (user.DateVerified == null){
+			await mail.verifyEmail(email, user.Username, user.VerifyKey)
+			return (null);
+		} else {
+			return (["Account already verified"]);
+		} 
+	} else return(["Account not found"]);
+}
+
+//returns null on success, array of errors on failure
+async function resetPasswordEmail(email){
+	try {
+		let errors = [];
+		if (email == null)
+			return([config.MSG_FORM_INVALID]);
+		let user = await sql.findEmail(email);
+		if (user != null && user.Id != null){
+			let key = gen.getRandomInt(10000, 99999);
+			let request = `VerifyKey=?`;
+			let data = await sql.updateUser(user.Id, request, [ key ]);
+			if (!data)
+				errors.push('Failed to reset password');
+			else {
+				user.VerifyKey = key;
+				mail.resetEmail(email, user.Username, key);
+			}
+			if (errors.length == 0){
+				return (null);
+			}
+			else
+				return (errors);
+		} else {
+			errors.push('Account not found');
+			return (errors);
+		}
+	} catch (err){
+		console.log(err);
+		//mail error
+		errors = ['An Unexpected Error Occured Please Try Again Later...'];
+		return (errors);
+	}
+}
+
+//returns null on success, array of errors on failure
+async function resetUserPassword(email, password, repassword, key){
+	let errors = [];
+	try {
+		if ( email == null || password == null || repassword == null || key == null)
+			return([config.MSG_FORM_INVALID]);						
+		if (!verify.checkPassword(password))
+			errors.push('Password must contain: \'uppercase\', \'lowercase\', \'numeric\', \'special\' & at least 8 characters');
+		if (!verify.checkRePassword(password, repassword))
+			errors.push('Passwords do not match');
+		//check verification key
+		let data  = await sql.findEmail(email);
+		if (data != null){
+			if (data.VerifyKey != key)
+				errors.push("Key mismatch");
+		} else{
+			errors.push("Unknown User");
+		}
+		//set password
+		if (errors.length == 0){
+			let hash = await bcrypt.hash(password, 6);
+			let request = `Password=?, VerifyKey=?`
+			data = sql.updateUser(data.Id, request, [hash, null])
+			if (data != null){
+				password = hash;
+				console.log(`${email} changed password`);
+				return(null);
+			} else {
+				return(['An unexpected error occured please try again later...']);
+			}
+		} else {
+			return (errors);
+		}
+	} catch (err){
+		console.log(err);
+		//mail error
+		errors = ['An Unexpected Error Occured Please Try Again Later...'];
+		return (errors);
+	}
+}
+
 //returns the modified user on success, array of errors on failure
 async function updateUserProfile(user){
 	let errors = [];
@@ -144,7 +261,7 @@ async function updateUserProfile(user){
 	let request;
 	try{
 		if (user == null || user.Id == null)
-			return(['Fields are not valid']);
+			return([config.MSG_FORM_INVALID]);
 			let data = await sql.findId(user.Id);
 			if (data == null)
 				return (['Invalid User']);
@@ -203,8 +320,8 @@ async function updateUserProfile(user){
 					errors.push('Invalid Email address');
 				else {
 					//Create new key
-					user.VerifyKey = await bcrypt.genSalt(1);
-					mail.verifyEmail(user.NewEmail, user.Id, user.Username, user.VerifyKey);
+					user.VerifyKey = gen.getRandomInt(10000, 99999);
+					mail.verifyEmail(user.NewEmail, user.Username, user.VerifyKey);
 					//Unverify
 					//Set New Email
 					build.push('NewEmail=?');
@@ -243,135 +360,27 @@ async function updateUserProfile(user){
 	}
 }
 
-//returns null on success, array of errors on failure
-async function verifyUserEmail(id, key){
-	let res;
-	let errors = [];
-	if (id == null || key == null)
-		return(['Fields are not valid']);
-	let data = await sql.findId(id);
-	if (data != null && data.VerifyKey != null && data.DateVerified == null){
-		//verify
-		if (key == data.VerifyKey && data.NewEmail != null){
-			data.VerifyKey = null;
-			data.DateVerified = new Date();
-			data.Email = data.NewEmail;
-			data.NewEmail = null;
-			let request = `Email=?, NewEmail=?, VerifyKey=?, DateVerified=?`
-			res = await sql.updateUser(id, request,
-			[data.Email, data.NewEmail, data.VerifyKey, data.DateVerified] );
-			if (res == 1){
-				console.log(`${id} verified email`);
-				return(null);
-			} else errors.push("Failed to verify");
-		} else errors.push("Key mismatch");
-	}
-	return (errors);
-}
-
-async function resendVerifyEmail(email){
-	let user = await sql.findEmail(email);
-	if (user != null && user.Id != null){
-		await mail.verifyEmail(email, user.Id, user.Username, user.VerifyKey)
-		return (null);
-	} else return(["Account not found"]);
-}
-
-//returns null on success, array of errors on failure
-async function resetPasswordEmail(email){
-	try {
-		let errors = [];
-		if (email == null)
-			return(['Fields are not valid']);
-		let user = await sql.findEmail(email);
-		if (user != null && user.Id != null){
-			let key = await bcrypt.genSalt(1);
-			let request = `VerifyKey=?`;
-			let data = await sql.updateUser(user.Id, request, [ key ]);
-			if (!data)
-				errors.push('Failed to reset password');
-			else {
-				user.VerifyKey = key;
-				mail.resetEmail(email, user.Id, user.Username, key);
-			}
-			if (errors.length == 0){
-				return (null);
-			}
-			else
-				return (errors);
-		} else {
-			errors.push('Account not found');
-			return (errors);
-		}
-	} catch (err){
-		console.log(err);
-		//mail error
-		errors = ['An Unexpected Error Occured Please Try Again Later...'];
-		return (errors);
-	}
-}
-
-//returns null on success, array of errors on failure
-async function resetUserPassword(email, password, repassword, key){
-	let errors = [];
-	try {
-		if ( id == null || password == null || repassword == null || key == null)
-			return(['Fields are not valid']);							
-		if (!verify.checkPassword(password))
-			errors.push('Password must contain: \'uppercase\', \'lowercase\', \'numeric\', \'special\' & at least 8 characters');
-		if (!verify.checkRePassword(password, repassword))
-			errors.push('Passwords do not match');
-		//check verification key
-		let data  = await sql.findEmail(email);
-		if (data != null){
-			if (data.VerifyKey != key)
-				errors.push("Key mismatch");
-		} else{
-			errors.push("Unknown User");
-		}
-		//set password
-		if (errors.length == 0){
-			let hash = await bcrypt.hash(password, 6);
-			let request = `Password=?, VerifyKey=?`
-			data = sql.updateUser(id, request, [hash, null])
-			if (data){
-				password = hash;
-				console.log(`${id} changed password`);
-				return(null);
-			} else {
-				errors.push('An unexpected error occured please try again later...');
-			}
-		}
-		return (errors);
-	} catch (err){
-		console.log(err);
-		//mail error
-		errors = ['An Unexpected Error Occured Please Try Again Later...'];
-		return (errors);
-	}
-}
-
 //Returns null on success, array of errors on failure
 async function deleteUser(user){
 	let errors = [];
 	try {
 		if ( user == null || user.Id == null || user.Password == null )
-			return(['Fields are not valid']);
-			let data = await sql.findId(user.Id);
-			if (data != null){
-				if (await bcrypt.compare(user.Password, data.Password)){
-					let request = `DateDeleted=?`
-					let res = await sql.updateUser(user.Id, request, new Date().toLocaleDateString());
-					if (res){
-						return (null);
-					} else {
-						errors.push('An Unexpected Error Occured Please Try Again Later...');
-					}
+			return([config.MSG_FORM_INVALID]);
+		let data = await sql.findId(user.Id);
+		if (data != null){
+			if (await bcrypt.compare(user.Password, data.Password)){
+				let request = `DateDeleted=?`
+				let res = await sql.updateUser(user.Id, request, new Date().toLocaleDateString());
+				if (res){
+					return (null);
 				} else {
-					errors.push('Password Incorrect');
+					errors.push('An Unexpected Error Occured Please Try Again Later...');
 				}
 			} else {
-			errors.push('User Not Found');
+				errors.push('Password Incorrect');
+			}
+		} else {
+		errors.push('User Not Found');
 		}
 		return(errors);
 	} catch (err){

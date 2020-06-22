@@ -2,16 +2,16 @@
 var nodemailer = require('nodemailer');
 
 
-function verifyEmail(email, id, username, key){
+function verifyEmail(email, username, key){
 	let from = '"Matcha" <Verify@matcha.com>';
 	let to = email;
 	let subject = `${username} Please Verify Your Email.`;
 	//Text************************************************************************************
 	let bodyText = `
 	Dear ${username},
-	Please use the following link to verify your Matcha account:
+	Please use the following code to verify your Matcha account:
 	
-	http://localhost:3000/verifyEmail?Id=${id}&VerifyKey=${key}
+	${key}
 
 	Regards,
 	Matcha Team
@@ -19,9 +19,9 @@ function verifyEmail(email, id, username, key){
 	//HTML************************************************************************************
 	let bodyHtml = `
 	Dear <strong>${username}<strong>,
-	<p>Please use the following link to verify your Matcha account:</p><br/>
+	<p>Please use the following code to verify your Matcha account:</p><br/>
 
-	<h4><a href="http://localhost:3000/verifyEmail?Id=${id}&VerifyKey=${key}">Click Me Baby..</a></h4>
+	<h1>${key}</h1>
 
 	<p>Regards,</p>
 	<p>Matcha Team</p>
@@ -30,16 +30,16 @@ function verifyEmail(email, id, username, key){
 	return (sendMail(from, to, subject, bodyText, bodyHtml));
 }
 
-function resetEmail(email, id, username, key){
+function resetEmail(email, username, key){
 	let from = '"Matcha" <Reset@matcha.com>';
 	let to = email;
 	let subject = `${username} Password Reset Key.`;
 	//Text************************************************************************************
 	let bodyText = `
 	Dear ${username},
-	Please use the following link to change your password:
+	Please use the following code to change your password:
 	
-	http://localhost:3000/resetPassword?Id=${id}&VerifyKey=${key}
+	${key}
 
 	Regards,
 	Matcha Team
@@ -47,9 +47,9 @@ function resetEmail(email, id, username, key){
 	//HTML************************************************************************************
 	let bodyHtml = `
 	Dear <strong>${username}<strong>,
-	<p>Please use the following link to change your password:</p><br/>
+	<p>Please use the following code to change your password:</p><br/>
 	
-	<h4><a href="http://localhost:3000/resetPassword?Id=${id}&VerifyKey=${key}">Click Me Baby..</a></h4>
+	<h1>${key}</h1>
 
 	<p>Regards,</p>
 	<p>Matcha Team</p>

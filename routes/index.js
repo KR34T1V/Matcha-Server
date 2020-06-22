@@ -5,6 +5,7 @@ const profile = require(`../schema/profileSchema`);
 const sql = require('../schema/SQLSchema');
 const filter = require('../schema/filterSchema');
 const g = require('../schema/generalSchema');
+const config = require("../config");
 
 router.get('/home', async (req, res) => {
 	try {
@@ -71,19 +72,29 @@ router.post('/register', async (req, res) => {
 		res.send(JSON.stringify({errors: data}));
 });
 
-router.post('/verifyEmail', async (req, res)=> {
-	if (req.body != null && req.body.Id != null && req.body.VerifyKey != null){
-		let result = await profile.verifyUserEmail(req.query.Id, req.query.VerifyKey);
+router.post('/user/verifyEmail', async (req, res)=> {
+	if (req.body != null && req.body.Email != null && req.body.VerifyKey != null){
+		let result = await profile.verifyUserEmail(req.body.Email, req.body.VerifyKey);
 		if (result == null){
-			res.send("Success");
+			res.send(JSON.stringify({data:{
+				result : "Success"}}));
+		} else {
+			res.send(result);
 		}
-		res.send(result);
-	} else res.send(["Oops, we had a little accident"]);
+	} else res.send(JSON.stringify({data:{
+		errors: [config.MSG_FORM_INVALID]
+	}}));
 })
 
-router.post('/verifyEmail/email', async (req, res) => {
+router.post('/user/verifyEmail/email', async (req, res) => {
 	if (req.body != null && req.body.Email != null){
-		await profile.resendVerifyEmail(Email);
+		await profile.resendVerifyEmail(req.body.Email);
+		res.send(JSON.stringify({data:{
+			result: "Success" }}));
+	} else {
+		res.send(JSON.stringify({data:{
+			errors: ["Well, I think we messed up if you see this, please continue like this never happened"]
+		}}))
 	}
 })
 
@@ -93,7 +104,7 @@ router.post('/login', async (req, res) => {
 		res.send(JSON.stringify({
 			data:{
 				AccessToken: data.AccessToken,
-				Verified: data.DateVerified ? true:false
+				Verified: data.DateVerified != null ? true : false
 			}
 		}));
 	} else {
@@ -233,9 +244,10 @@ router.get('/getProfileLikes', async (req, res)=>{
 })
 
 router.post('/user/passwordReset', async (req, res) => {
-	console.log(req.body);
-	if (req.body != null && req.body.Email != null){
-		let result = await profile.resetUserPassword(req.body.Email);
+	let bod = req.body
+	if (bod != null){
+		let result = await profile.resetUserPassword(bod.Email, 
+			bod.Password, bod.RePassword, bod.VerifyKey);
 		//success
 		if (result == null)
 			res.send("Success");
@@ -267,16 +279,6 @@ router.post('/user/passwordReset/email', async (req, res) => {
 		console.log(err);
 	}
 })
-
-router.get('/user/changePassword', async (req, res) => {
-	let input = req.query;
-	let result = await profile.changeUserPassword(input.Id,
-		input.Password, input.RePassword, input.VerifyKey);
-	if (result ==null)
-		res.send("Success");
-	else
-		res.send(result);
-});
 
 router.get('/user/delete', async (req, res) => {
 	let userData = req.body;

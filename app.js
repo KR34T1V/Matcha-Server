@@ -5,6 +5,7 @@ const sql = require('./schema/SQLSchema');
 const profile = require('./schema/profileSchema');
 const app = express();
 const indexRouter = require('./routes/index');
+const config = require('./config');
 const port = 3030;
 
 
@@ -14,4 +15,4 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use('/', indexRouter);
 
-app.listen(port, () => console.log(`Example app listening at http://localhost:${port}`));
+app.listen(port, () => console.log(`Matcha listening at http://localhost:${port}`));

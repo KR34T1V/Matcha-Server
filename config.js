@@ -38,6 +38,8 @@ DateDeleted DATETIME
 const PASSWORD_LENGTH = 8;
 const ACCESS_EXPIRY = (60 * 10) //seconds;
 
+const MSG_FORM_INVALID = "Fields are incomplete or invalid";
+
 module.exports = {
 	MY_SQL_HOST,
 	MY_SQL_USERNAME,
@@ -46,5 +48,6 @@ module.exports = {
 	USERS_TABLE,
 	USERS_TABLE_COLUMNS,
 	PASSWORD_LENGTH,
-	ACCESS_EXPIRY
+	ACCESS_EXPIRY,
+	MSG_FORM_INVALID
 }
