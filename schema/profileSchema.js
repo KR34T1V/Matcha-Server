@@ -253,6 +253,34 @@ async function resetUserPassword(email, password, repassword, key){
 	}
 }
 
+async function userPasswordChange(token, oldPwd, newPwd, rePwd){
+	let errors = [];
+	if (token == null || oldPwd == null || newPwd == null || rePwd == null)
+		return ([config.MSG_FORM_INVALID]);
+	if(verify.checkPassword(newPwd)){
+		errors.push('Password must contain: \'uppercase\', \'lowercase\', \'numeric\', \'special\' characters');		
+	}
+	if(verify.checkRePassword(newPwd,rePwd)){
+		errors.push('Passwords do not match');
+	}
+	let user = await verifyAccessToken(token);
+	if (user != null && user.Id != null){
+		if(await bcrypt.compare(oldPwd, user.Password)){
+			if (errors.length == 0){
+				let hash = await bcrypt.hash(newPwd, 6);
+				let request = 'Password=?'
+				if (await sql.updateUser(user.Id, request, [hash])){
+					return (null);
+				} else errors.push('Failed to update Password');
+			}
+		} else errors.push('Password Incorrect')
+	} else errors = user;
+
+	if (errors != null && errors.length > 0){
+		return(errors)
+	}
+}
+
 //returns the modified user on success, array of errors on failure
 async function updateUserProfile(user){
 	let errors = [];
@@ -631,5 +659,6 @@ module.exports = {
 	verifyAccessToken,
 	calculateUserFame,
 	calculateUserAge,
-	calculateDateDifference
+	calculateDateDifference,
+	userPasswordChange
 }

@@ -79,7 +79,7 @@ router.post('/user/verifyEmail', async (req, res)=> {
 			res.send(JSON.stringify({data:{
 				result : "Success"}}));
 		} else {
-			res.send(result);
+			res.send(JSON.stringify(result));
 		}
 	} else res.send(JSON.stringify({data:{
 		errors: [config.MSG_FORM_INVALID]
@@ -164,6 +164,29 @@ router.post('/user/updateProfile', async (req, res) => {
 		console.log (err);
 	}
 });
+
+router.post('/user/passwordChange', async (req, res) => {
+	try{
+		let input = req.body;
+		console.log(input);
+		if (input != null){
+			let result = await profile.userPasswordChange(input.AccessToken, input.Password,
+				input.NewPassword, input.RePassword);
+			if (result == null){
+				res.send(JSON.stringify({data:{
+					result: 'Success'
+				}}));
+			} else {
+				res.send(JSON.stringify({data: {
+					errors: result
+				}}));
+			}
+		}
+
+	}catch(err){
+		console.log(err);
+	}
+})
 
 router.get('/view/profile', async (req, res) => {
 	let AccessToken = req.query.AccessToken;

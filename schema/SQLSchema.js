@@ -74,7 +74,7 @@ async function newUser(user){
 	}
 }
 
-//kinda working
+//returns 1 on change and 0 on failure
 async function updateUser(id, qry, varArray){
 	try{
 		if (id != null && qry != null && varArray != null){
