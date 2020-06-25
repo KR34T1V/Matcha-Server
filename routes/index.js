@@ -108,9 +108,9 @@ router.post('/login', async (req, res) => {
 			}
 		}));
 	} else {
-		res.send(JSON.stringify({
+		res.send(JSON.stringify({ data: {
 			errors: data
-		}));
+		}}));
 	}
 });
 
@@ -147,7 +147,6 @@ router.get('/user/profile', async (req, res) => {
 						Interests: user.Interests
 					}
 				}))
-				console.log(JSON.parse(user.Images));
 			} else 
 			res.send(JSON.stringify({
 				errors: ["Access Token Expired"]
@@ -160,6 +159,18 @@ router.get('/user/profile', async (req, res) => {
 
 router.post('/user/updateProfile', async (req, res) => {
 	try {
+		let input = req.body;
+		let result = await profile.userUpdateProfile(input);
+		if (result === null){
+			res.send(JSON.stringify({data:{
+				result: 'Success',
+				msg: 'Profile Saved'
+			}}));
+		} else {
+			res.send(JSON.stringify({data:{
+				errors: result
+			}}))
+		}
 	}catch(err){
 		console.log (err);
 	}
@@ -168,7 +179,6 @@ router.post('/user/updateProfile', async (req, res) => {
 router.post('/user/passwordChange', async (req, res) => {
 	try{
 		let input = req.body;
-		console.log(input);
 		if (input != null){
 			let result = await profile.userPasswordChange(input.AccessToken, input.Password,
 				input.NewPassword, input.RePassword);
@@ -191,7 +201,6 @@ router.post('/user/passwordChange', async (req, res) => {
 router.get('/view/profile', async (req, res) => {
 	let AccessToken = req.query.AccessToken;
 	let ProfileId = req.query.ProfileId;
-	console.log(req.query);
 	let user = await profile.verifyAccessToken(AccessToken);
 	if (user != null && user.Id != null){
 		let result = await profile.viewProfile(user.Id, ProfileId);

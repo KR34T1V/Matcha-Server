@@ -257,10 +257,10 @@ async function userPasswordChange(token, oldPwd, newPwd, rePwd){
 	let errors = [];
 	if (token == null || oldPwd == null || newPwd == null || rePwd == null)
 		return ([config.MSG_FORM_INVALID]);
-	if(verify.checkPassword(newPwd)){
+	if(!verify.checkPassword(newPwd)){
 		errors.push('Password must contain: \'uppercase\', \'lowercase\', \'numeric\', \'special\' characters');		
 	}
-	if(verify.checkRePassword(newPwd,rePwd)){
+	if(!verify.checkRePassword(newPwd,rePwd)){
 		errors.push('Passwords do not match');
 	}
 	let user = await verifyAccessToken(token);
@@ -281,18 +281,18 @@ async function userPasswordChange(token, oldPwd, newPwd, rePwd){
 	}
 }
 
-//returns the modified user on success, array of errors on failure
-async function updateUserProfile(user){
+//returns null on success, array of errors on failure
+async function userUpdateProfile(user){
 	let errors = [];
 	let build = [];
 	let form = [];
 	let request;
 	try{
-		if (user == null || user.Id == null)
+		if (user == null || user.AccessToken == null)
 			return([config.MSG_FORM_INVALID]);
-			let data = await sql.findId(user.Id);
-			if (data == null)
-				return (['Invalid User']);
+			let data = await verifyAccessToken(user.AccessToken);
+			if (data == null || data.Id == null)
+				return (['Invalid Access Token']);
 			if (user.Username != null && user.Usermame != data.Username){
 				if (!verify.checkUserName(user.Username))
 					errors.push('Username may not contain special characters');
@@ -362,23 +362,23 @@ async function updateUserProfile(user){
 			}
 
 			//PASSWORD
-			console.log(user.Password);
-			if (! await bcrypt.compare(user.Password, data.Password)){
-				if (!verify.checkPassword(user.Password)){
-					errors.push('Password must contain: \'uppercase\', \'lowercase\', \'numeric\', \'special\' characters');
-					if (!verify.checkRePassword(user.Password, user.RePassword))
-						errors.push('Passwords do not match');
-					else {
-						user.Password = await bcrypt.hash(user.Password, 6);
-						build.push('Password=?');
-						form.push(user.Password);
-					}
-				}
-			}
+			// console.log(user.Password);
+			// if (! await bcrypt.compare(user.Password, data.Password)){
+			// 	if (!verify.checkPassword(user.Password)){
+			// 		errors.push('Password must contain: \'uppercase\', \'lowercase\', \'numeric\', \'special\' characters');
+			// 		if (!verify.checkRePassword(user.Password, user.RePassword))
+			// 			errors.push('Passwords do not match');
+			// 		else {
+			// 			user.Password = await bcrypt.hash(user.Password, 6);
+			// 			build.push('Password=?');
+			// 			form.push(user.Password);
+			// 		}
+			// 	}
+			// }
 			if (errors.length == 0){
 				request = await sql.buildQuery(build, ', ');
-				if (await sql.updateUser(user.Id, request, form))
-					return user;
+				if (await sql.updateUser(data.Id, request, form))
+					return (null);
 				errors.push('An Unexpected Error Occured Please Try Again Later...');
 			}
 			return(errors);
@@ -571,7 +571,7 @@ async function verifyAccessToken(token){
 		if (token == null)
 			return(['Fields are not valid']);
 		let res = await sql.findAccessToken(token);
-		if (res != null && res.AccessToken != null)
+		if (res != null && res.AccessToken != null){
 			if (res.AccessToken === token){
 				//check this date test
 				if (await calculateDateDifference(new Date(), res.AccessTime) < config.ACCESS_EXPIRY){
@@ -580,6 +580,7 @@ async function verifyAccessToken(token){
 				}
 				return (['AccessToken Expired']);
 			} 
+		}
 		return (null);
 	} catch (err){
 		console.log(err);
@@ -646,7 +647,7 @@ module.exports = {
 	deleteUser,
 	resetUserPassword,
 	resetPasswordEmail,
-	updateUserProfile,
+	userUpdateProfile,
 	viewProfile,
 	loginUser,
 	logoutUser,
