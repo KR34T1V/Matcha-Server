@@ -4,8 +4,9 @@ const verify = require('./verificationSchema');
 const bcrypt = require('bcryptjs');
 const mail = require('./emailSchema');
 const gen = require('./generatorSchema');
-const moment = require ('moment');
-const config = require ('../config');
+const moment = require('moment');
+const config = require('../config');
+const chat = require('./messageSchema');
 
 start();
 

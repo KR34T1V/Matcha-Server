@@ -5,7 +5,9 @@ const profile = require(`../schema/profileSchema`);
 const sql = require('../schema/SQLSchema');
 const filter = require('../schema/filterSchema');
 const g = require('../schema/generalSchema');
-const config = require("../config");
+const config = require('../config');
+const formidable = require('formidable');
+
 
 router.get('/home', async (req, res) => {
 	try {
@@ -175,6 +177,15 @@ router.post('/user/updateProfile', async (req, res) => {
 		console.log (err);
 	}
 });
+
+router.post('/user/updateProfile/avatar',async (req, res) => {
+	console.log(req.files);
+	console.log(req.file);
+	const form = new formidable.IncomingForm();
+	form.parse(req, (err, fields, files)=>{
+		console.log(files);
+	})
+})
 
 router.post('/user/passwordChange', async (req, res) => {
 	try{

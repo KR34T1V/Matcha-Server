@@ -2,7 +2,6 @@
 const mysql = require('mysql');
 const config = require('../config');
 const util = require('util');
-const moment = require('moment');
 
 const con = mysql.createConnection({
 	host: config.MY_SQL_HOST,
@@ -19,6 +18,7 @@ con.connect(async (err) => {
 	await createDatabase(config.DATABASE_NAME);
 	await selectDatabase(config.DATABASE_NAME);
 	await createTable(config.USERS_TABLE, config.USERS_TABLE_COLUMNS);
+	await createTable(config.CHAT_TABLE, config.CHAT_TABLE_COLUMNS);
 	console.log("MySQL Connected!");
 });
 
@@ -212,6 +212,43 @@ async function stripHTML(string){
 	return (string);
 }
 
+//CHAT
+async function sendChatMessage(senderId, receiverId, msg){
+	try{
+		let request = `INSERT INTO ${config.CHAT_TABLE} (FromId, ToId, Message) VALUES (?, ?, ?)`;
+		let res = await query(request, [senderId, receiverId, msg]);
+		return(res);
+	} catch (err){
+		console.log(err);
+	}
+}
+
+async function readChatMessages(senderId, receiverId){
+	try{
+		let request = `SELECT FromId, Viewed, Message FROM ${config.CHAT_TABLE} WHERE (FromId=? AND ToId=?) OR (FromId=? AND ToId=?) ORDER BY TimeStamp`;
+		let res = await query(request, [senderId, receiverId, receiverId, senderId]);
+		request = `UPDATE ${config.CHAT_TABLE} SET Viewed=True WHERE ToId=?`
+		await query(request, [receiverId]);
+		return(res);
+	} catch (err){
+		console.log(err);
+	}
+}
+
+async function checkNewChatMessages(userId){
+	try{
+		let request1 = `SELECT FromId FROM ${config.CHAT_TABLE} WHERE ToId=? AND Viewed IS NULL ORDER BY TimeStamp`;
+		// let res = await query(request1, [userId]);
+		// if (res != null && res.length > 0){
+			let request2 = `SELECT Username FROM ${config.USERS_TABLE} WHERE Id IN (${request1}) AND Id!=? AND DateDeleted IS NULL`
+			let rest = await query(request2, [userId, userId]);
+			return (rest);
+		// }
+	} catch (err){
+		console.log(err);
+	}
+}
+
 //SUBMODULES
 
 async function insertUser(user){
@@ -220,7 +257,6 @@ async function insertUser(user){
 		let request = `INSERT INTO ${config.USERS_TABLE} 
 		(AccessTime, Username, Firstname, Lastname, Birthdate, Gender, SexualPreference, NewEmail,
 		VerifyKey, Password) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-		console.log(user.VerifyKey);
 		let res = await query(request, [user.AccessTime, user.Username, user.Firstname, user.Lastname, 
 			user.Birthdate, user.Gender, user.SexualPreference, user.NewEmail, user.VerifyKey, user.Password]);
 		return (user);
@@ -242,5 +278,8 @@ module.exports = {
 	findUsername,
 	buildQuery,
 	findAccessToken,
-	stripHTML
+	stripHTML,
+	sendChatMessage,
+	readChatMessages,
+	checkNewChatMessages
 }
