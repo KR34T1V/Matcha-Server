@@ -4,12 +4,12 @@ const config = require('../config');
 const gen = require('./generatorSchema');
 
 async function test(){
-	for (var i = 0; i <= 50; i++){
-		sql.sendChatMessage(gen.getRandomInt(1, 25),gen.getRandomInt(1, 25),`test message ${i}`)
-	}
+	// for (var i = 0; i <= 50; i++){
+	// 	sql.sendChatMessage(gen.getRandomInt(1, 25),gen.getRandomInt(1, 25),`test message ${i}`)
+	// }
 	let news = await sql.checkNewChatMessages(1);
 	console.log(news);
-	let rest = await sql.readChatMessages(1,2);
+	// let rest = await sql.readChatMessages(1,2);
 	// console.log(rest);
 }
 test();

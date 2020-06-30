@@ -19,6 +19,7 @@ con.connect(async (err) => {
 	await selectDatabase(config.DATABASE_NAME);
 	await createTable(config.USERS_TABLE, config.USERS_TABLE_COLUMNS);
 	await createTable(config.CHAT_TABLE, config.CHAT_TABLE_COLUMNS);
+	await createTable(config.NOTIFY_TABLE, config.NOTIFY_TABLE_COLUMNS);
 	console.log("MySQL Connected!");
 });
 
@@ -237,18 +238,45 @@ async function readChatMessages(senderId, receiverId){
 
 async function checkNewChatMessages(userId){
 	try{
-		let request1 = `SELECT FromId FROM ${config.CHAT_TABLE} WHERE ToId=? AND Viewed IS NULL ORDER BY TimeStamp`;
-		// let res = await query(request1, [userId]);
-		// if (res != null && res.length > 0){
-			let request2 = `SELECT Username FROM ${config.USERS_TABLE} WHERE Id IN (${request1}) AND Id!=? AND DateDeleted IS NULL`
-			let rest = await query(request2, [userId, userId]);
-			return (rest);
-		// }
+		let request1 = `SELECT FromId FROM ${config.CHAT_TABLE} WHERE ToId=? AND Viewed=FALSE ORDER BY TimeStamp`;
+		let request2 = `SELECT Id, Username, Avatar FROM ${config.USERS_TABLE} WHERE Id IN (${request1}) AND Id!=? AND DateDeleted IS NULL`
+		let rest = await query(request2, [userId, userId]);
+		return (rest);
 	} catch (err){
 		console.log(err);
 	}
 }
 
+//NOTIFICATIONS
+async function newUserNorification(userID, message){
+	try{
+		let request = `INSERT INTO ${config.NOTIFY_TABLE} (User, Message) VALUES (?, ?)`;
+		let result = await query(request, [userID, message]);
+		return (result);
+	} catch (err){
+		console.log(err);
+	}
+}
+
+async function getUserNotifications(userId){
+	try{
+		let request = `SELECT Message Viewed FROM ${config.NOTIFY_TABLE} WHERE Id=? ORDER BY TimeStamp`
+		let result = await query(request, [userId]);
+		return(result);
+	} catch (err){
+		console.log(err);
+	}
+}
+
+async function clearUserNotifications(userId){
+	try{
+		let request = `DELETE FROM ${config.NOTIFY_TABLE} WHERE Id=? AND Viewed=TRUE`;
+		let result = await query(request, [userId]);
+		return(result);
+	} catch (err){
+		console.log(err);
+	}
+}
 //SUBMODULES
 
 async function insertUser(user){

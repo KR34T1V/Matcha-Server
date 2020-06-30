@@ -168,7 +168,7 @@ function generateLocation(){
 }
 
 async function generateAccessToken(){
-	return await gen.getRandomInt(10000, 99999);
+	return await bcrypt.genSalt(1);
 }
 
 module.exports = {
