@@ -12,8 +12,8 @@ start();
 
 async function start(){
 	// await gen.generateUsers(25);
-	// likeAlot(50, 25);
-	// viewAlot(25, 25);
+	// likeAlot(3, 25);
+	// viewAlot(3, 25);
 	// console.log(await findIds([1,2,3,4,5,6]));
 	// console.log(await viewUser(1, 6));
 
@@ -294,7 +294,7 @@ async function userUpdateProfile(user){
 			let data = await verifyAccessToken(user.AccessToken);
 			if (data == null || data.Id == null)
 				return (['Invalid Access Token']);
-			if (user.Username != null && user.Usermame != data.Username){
+			if (user.Username != null && user.Username != data.Username){
 				if (!verify.checkUserName(user.Username))
 					errors.push('Username may not contain special characters');
 				else {
@@ -423,6 +423,7 @@ async function deleteUser(user){
 //Returns 1 on Liked -1 on Disliked,and 0 on error;
 async function likeUser(id, profileId){
 	let rtn = 1;
+	let msg;
 	try{
 		if (id != null && profileId != null){
 			let user1 = await sql.findId(id);
@@ -440,12 +441,21 @@ async function likeUser(id, profileId){
 				else 
 					user2.LikedBy = JSON.parse(user2.LikedBy);
 				// unlike user if already liked
-				if (user1.Liked.includes(profileId) || user2.LikedBy.includes(id)){
+				if (user1.Liked.includes(profileId) && user2.LikedBy.includes(id)){
 					console.log(`${id} disliked ${profileId}`);
 					user1.Liked = user1.Liked.filter(e => e != profileId);
 					user2.LikedBy = user2.LikedBy.filter(e => e != id);
 					rtn = -1;
+					msg = `${user1.Username} broke your conexion :(`;
+					sql.newUserNorification(user1.Id, user2.Id, msg);
 				} else {
+					if (user1.LikedBy != null && user2.LikedBy != null &&
+					user1.LikedBy.includes(user2.Id) && user2.LikedBy.includes(user1.Id)){
+						let msg1 = `You have been matched with ${user2.Username}`;
+						let msg2 = `You have been matched with ${user1.Username}`;
+						sql.newUserNorification(user1.Id, user2.Id, msg1);
+						sql.newUserNorification(user2.Id, user1.Id, msg2);
+					}
 					console.log(`${id} liked ${profileId}`);
 					user1.Liked.push(profileId);
 					user2.LikedBy.push(id);
@@ -455,6 +465,10 @@ async function likeUser(id, profileId){
 				request = `LikedBy=?`;
 				let data2 = await sql.updateUser(profileId, request, [JSON.stringify(user2.LikedBy)]);
 				if (data1 == 1 && data2 == 1){
+					if (rtn != -1){
+						msg = `${user1.Username} just liked you`
+						sql.newUserNorification(user1.Id, user2.Id, msg)
+					}
 					return(rtn);
 				}
 				return (0);
@@ -476,16 +490,15 @@ async function viewProfile(id, profileId){
 					data.ViewedBy = [];
 				else
 					data.ViewedBy = JSON.parse(data.ViewedBy);
-
 				if (!data.ViewedBy.includes(id)){
-					//log view
 					data.ViewedBy.push(id);
 				}
-
 				data.ViewedBy = JSON.stringify(data.ViewedBy);
 				let request = `ViewedBy=?`;
 				let res = await sql.updateUser(profileId, request, [data.ViewedBy]);
 				if (res == 1){
+					let msg = `${data.Username} just viewed your profile.`
+					sql.newUserNorification(id, profileId, msg);
 					console.log(`${id} viewed ${profileId}`);
 					return (data);
 				}

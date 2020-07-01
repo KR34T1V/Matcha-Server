@@ -248,10 +248,10 @@ async function checkNewChatMessages(userId){
 }
 
 //NOTIFICATIONS
-async function newUserNorification(userID, message){
+async function newUserNorification(FromId, ToId, message){
 	try{
-		let request = `INSERT INTO ${config.NOTIFY_TABLE} (User, Message) VALUES (?, ?)`;
-		let result = await query(request, [userID, message]);
+		let request = `INSERT INTO ${config.NOTIFY_TABLE} (FromId, ToId, Message) VALUES (?, ?, ?)`;
+		let result = await query(request, [FromId, ToId, message]);
 		return (result);
 	} catch (err){
 		console.log(err);
@@ -309,5 +309,9 @@ module.exports = {
 	stripHTML,
 	sendChatMessage,
 	readChatMessages,
-	checkNewChatMessages
+	checkNewChatMessages,
+	newUserNorification,
+	getUserNotifications,
+	clearUserNotifications
+
 }
