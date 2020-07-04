@@ -6,7 +6,26 @@ const sql = require('../schema/SQLSchema');
 const filter = require('../schema/filterSchema');
 const g = require('../schema/generalSchema');
 const config = require('../config');
-const formidable = require('formidable');
+const multer = require("multer");
+const storage = multer.diskStorage({
+	destination: function (req, file, cb){
+		cb(null, `${__dirname}/../public/uploads/`);
+	},
+	filename: function (req, file, cb){
+		const uniquePrefix = Date.now() + '-' + Math.round(Math.random() * 1E9)
+		cb(null, uniquePrefix + '-' + file.originalname);
+	}
+})
+const imageFilter = (req, file, cb) => {
+	console.log(file.mimetype);
+	if (file.mimetype === 'image/jpeg' || file.mimetype === 'image/png' || file.mimetype === 'image/jpg'){
+		cb(null, true);
+	} else cb (new Error('File is not of type image'), false);
+}
+const upload = multer({
+	fileFilter: imageFilter,
+	storage: storage
+});
 
 
 router.get('/home', async (req, res) => {
@@ -19,6 +38,7 @@ router.get('/home', async (req, res) => {
 			if (user != null && user.Id != null){
 				let data = await sql.getAllActiveUsers();
 				if (data != null){
+					//match sexual preference
 					payload = await filter.preference(user, data);
 					//hide users with no avatar
 					payload = payload.filter(e=> e.Avatar != null);
@@ -178,13 +198,24 @@ router.post('/user/updateProfile', async (req, res) => {
 	}
 });
 
-router.post('/user/updateProfile/avatar',async (req, res) => {
-	console.log(req.files);
-	console.log(req.file);
-	const form = new formidable.IncomingForm();
-	form.parse(req, (err, fields, files)=>{
-		console.log(files);
-	})
+router.post('/user/updateProfile/avatar', upload.single('Avatar'), async (req, res) => {
+	let user = await profile.verifyAccessToken(req.body.AccessToken);
+	if (user != null && user.Id != null){
+		if (req.file != null){
+			let avatar = await profile.userUpdateAvatar(user.Id, req.file.filename);
+			res.send(JSON.stringify({data: {
+				res: 'Success',
+				msg: 'Profile Updated',
+				Avatar: avatar
+			}}))
+		} else res.send(JSON.stringify({data: {
+			res: 'error',
+			errors: ["Invalid file type"]
+		}}))
+	} else res.send(JSON.stringify({data: {
+		res: 'error',
+		errors: user
+	}}))
 })
 
 router.post('/user/passwordChange', async (req, res) => {
@@ -223,17 +254,19 @@ router.get('/view/profile', async (req, res) => {
 				Lastname: result.Lastname,
 				Gender: result.Gender,
 				SexualPreference: result.SexualPreference,
-				Age: profile.calculateUserAge(result),
+				Age: await profile.calculateUserAge(result),
 				Biography: result.Biography,
-				Interests: result.Interests,
+				Interests: JSON.parse(result.Interests),
 				Location: JSON.parse(result.Location),
-				Fame: profile.calculateUserFame(result),
+				Fame: await profile.calculateUserFame(result),
 				Avatar: result.Avatar,
 				Images: JSON.parse(result.Images),
-				LastOnline: result.AccessTime
+				LastOnline: result.AccessTime,
+				Liked: result.LikedBy != null ? (result.LikedBy.includes(user.Id) ? true : false) : false,
+				Blocked: user.BlockedUsers != null ? (user.BlockedUsers.includes(result.Id) ? true : false) : false
 			}}));
-		}
-	}
+		} else res.send(JSON.stringify({data:{errors: user}}))
+	} else res.send(JSON.stringify({data:{errors: ['Failed to retrieve profile.']}}))
 })
 
 router.get('/getProfileViews', async (req, res)=>{
@@ -330,21 +363,52 @@ router.get('/user/delete', async (req, res) => {
 	if (userData != null)
 		data = await profile.deleteUser(userData);
 		if (data == null)
-			res.send({'user': null});
+			res.send({data:{
+				res: "Success"
+			}});
 		else 
-			res.send({'errors': data})
+			res.send({data:{'errors': data}})
 });
 
-router.get('/user/like', async (req, res) => {
+router.post('/user/like', async (req, res) => {
 	let userData = req.body;
 	let data;
+	let user = await profile.verifyAccessToken(userData.AccessToken);
+	if (user != null && user.Id != null && userData.profileId != null){
+		data = await profile.likeUser(user.Id, userData.profileId);
+		if (data === 1){
+			res.send(JSON.stringify({data:{
+				res: "Success",
+				msg: "Liked User"
+			}}));
+		} else if (data === -1){
+			res.send(JSON.stringify({data:{
+				res: "Success",
+				msg: "Disliked User"
+			}}));
+		} else res.send(JSON.stringify({data:{errors: ["Oops something went Wrong"]}}));
+	} else res.send(JSON.stringify({data: {errors:  ["Oops something went Wrong"]}}));
+});
 
-	if (userData != null)
-		data = await profile.likeUser(userData);
-		if (data != null && data.Id != null)
-			res.send({'user': data});
-		else 
-			res.send({'errors': data})
+router.post('/user/block', async (req, res) => {
+	let userData = req.body;
+	let data;
+	let user = await profile.verifyAccessToken(userData.AccessToken);
+	console.log(userData);
+	if (user != null && user.Id != null && userData.profileId != null){
+		data = await profile.blockUser(user.Id, userData.profileId);
+		if (data === 1){
+			res.send(JSON.stringify({data:{
+				res: "Success",
+				msg: "Blocked User"
+			}}));
+		} else if (data === -1){
+			res.send(JSON.stringify({data:{
+				res: "Success",
+				msg: "Unblocked User"
+			}}));
+		} else res.send(JSON.stringify({data:{errors: ["Oops something went Wrong"]}}));
+	} else res.send(JSON.stringify({data: {errors:  ["Oops something went Wrong"]}}));
 });
 
 module.exports = router;

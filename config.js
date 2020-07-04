@@ -1,3 +1,6 @@
+//SERVER ATTRIBUTES
+SERVER_ADDRESS = `localhost:3030`
+
 //DATABASE CONSTANTS
 const MY_SQL_HOST ='localhost';
 const MY_SQL_USERNAME = 'kr34t1v';
@@ -63,6 +66,7 @@ const ACCESS_EXPIRY = (60 * 10) //seconds;
 const MSG_FORM_INVALID = "Fields are incomplete or invalid";
 
 module.exports = {
+	SERVER_ADDRESS,
 	MY_SQL_HOST,
 	MY_SQL_USERNAME,
 	MY_SQL_PASSWORD,

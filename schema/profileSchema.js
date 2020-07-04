@@ -389,6 +389,13 @@ async function userUpdateProfile(user){
 	}
 }
 
+// returns image file path
+async function userUpdateAvatar(id, path){
+	let qry = `Avatar=?`
+	path = `http://${config.SERVER_ADDRESS}/uploads/${path}`;
+	await sql.updateUser(id, qry, [path]);
+	return (path);
+}
 //Returns null on success, array of errors on failure
 async function deleteUser(user){
 	let errors = [];
@@ -526,9 +533,11 @@ async function findIds(idArray) {
 	return null;
   }
 
+//Returns 1 on Liked -1 on Disliked,and 0 on error;
 async function blockUser(id, profileId){
 	try{
 		let output;
+		let ret;
 		if (id != null && profileId != null){
 			let user1 = await sql.findId(id);
 			let user2 = await sql.findId(profileId);
@@ -542,20 +551,22 @@ async function blockUser(id, profileId){
 				if (user1.BlockedUsers.includes(profileId)){
 					output = `${id} unblocked ${profileId}`;
 					user1.BlockedUsers = user1.BlockedUsers.filter((e)=>e!=profileId)
+					ret = -1;
 				} else {
 					output = `${id} blocked ${profileId}`;
 					user1.BlockedUsers.push(profileId);
+					ret = 1;
 				}
 				user1.BlockedUsers = JSON.stringify(user1.BlockedUsers);
 				let request = `BlockedUsers=?`;
 				let res = await sql.updateUser(id, request, [user1.BlockedUsers]);
 				if (res == 1){
 					console.log(output);
-					return(1);
+					return(ret);
 				}
 			}
 		}
-		return (null);
+		return (0);
 	} catch (err){
 	console.log(err);
 	}
@@ -675,5 +686,6 @@ module.exports = {
 	calculateUserFame,
 	calculateUserAge,
 	calculateDateDifference,
-	userPasswordChange
+	userPasswordChange,
+	userUpdateAvatar
 }
