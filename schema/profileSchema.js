@@ -396,6 +396,15 @@ async function userUpdateAvatar(id, path){
 	await sql.updateUser(id, qry, [path]);
 	return (path);
 }
+
+async function userUpdateGallery(id, path, oldGallery, key){
+	let qry = `Images=?`
+	let imgPath = `http://${config.SERVER_ADDRESS}/uploads/${path}`;
+	let newGallery = oldGallery;
+	newGallery[key] = imgPath;
+	await sql.updateUser(id, qry, [oldGallery]);
+	return (oldGallery);
+}
 //Returns null on success, array of errors on failure
 async function deleteUser(user){
 	let errors = [];
@@ -687,5 +696,6 @@ module.exports = {
 	calculateUserAge,
 	calculateDateDifference,
 	userPasswordChange,
-	userUpdateAvatar
+	userUpdateAvatar,
+	userUpdateGallery
 }

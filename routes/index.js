@@ -218,6 +218,30 @@ router.post('/user/updateProfile/avatar', upload.single('Avatar'), async (req, r
 	}}))
 })
 
+router.post('/user/updateProfile/gallery', async (req, res) => {
+	let user = await profile.verifyAccessToken(req.body.AccessToken);
+	if (user != null && user.Id != null){
+		if (req.file != null && req.body.Key != null){
+			if (user.Images == null)
+				user.Images = [null, null, null, null, null];
+			let result = await profile.userUpdateGallery(user.Id, req.file.filename, user.Images, req.body.key);
+			if (result != null)
+				res.send(JSON.stringify({data: {
+					res: 'Success',
+					msg: 'Profile Updated',
+					Images: result
+				}}))
+		} else res.send(JSON.stringify({data: {
+			res:'error',
+			errors: ['File of invalid type']
+		}}))
+	} else res.send(JSON.stringify({data: {
+		res:'error',
+		errors: [user]
+	}}))
+});
+
+
 router.post('/user/passwordChange', async (req, res) => {
 	try{
 		let input = req.body;
