@@ -57,7 +57,7 @@ const CLOUDINARY_CONNECTION = {
 	api_key: '439656192988452',
 	api_secret: 'upQlu1NcoKeXGluWQARX9qwL8mo'
 }
-const IMAGE_FILTER = /\.(jpg|jpeg|png|gif)$/;
+const IMAGE_FILTER = /\.(jpg|jpeg|png|gif)$/; //not used
 
 //SECURITY REQUIREMENTS
 const PASSWORD_LENGTH = 8;

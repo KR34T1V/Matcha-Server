@@ -6,6 +6,7 @@ const sql = require('../schema/SQLSchema');
 const filter = require('../schema/filterSchema');
 const g = require('../schema/generalSchema');
 const config = require('../config');
+const msg = require('../schema/messageSchema');
 const multer = require("multer");
 const storage = multer.diskStorage({
 	destination: function (req, file, cb){
@@ -17,7 +18,6 @@ const storage = multer.diskStorage({
 	}
 })
 const imageFilter = (req, file, cb) => {
-	console.log(file.mimetype);
 	if (file.mimetype === 'image/jpeg' || file.mimetype === 'image/png' || file.mimetype === 'image/jpg'){
 		cb(null, true);
 	} else cb (new Error('File is not of type image'), false);
@@ -179,6 +179,42 @@ router.get('/user/profile', async (req, res) => {
 	}
 })
 
+router.get('/user/chat', async (req, res) => {
+	try{
+		if (req.query != null && req.query.AccessToken != null && req.query.Id != null){
+			let chat = await msg.readChat(req.query.AccessToken, req.query.Id);
+			let user = await sql.findId(req.query.Id);
+			res.send(JSON.stringify({data: {
+				res:'Success',
+				Username: user.Username,
+				Chat: chat
+			}}))
+		} else res.send(JSON.stringify({data: {
+			res: 'error',
+			errors: [config.MSG_FORM_INVALID]
+		}}))
+	} catch (err){
+		console.log(err);
+	}
+})
+
+router.get('/user/connexions', async (req, res) => {
+	try{
+		if (req.query != null && req.query.AccessToken != null){
+			let connexions = await profile.getUserConnexions(req.query.AccessToken);
+			res.send(JSON.stringify({data:{
+				res: 'Success',
+				Connexions: connexions
+			}}));
+		} else res.send(JSON.stringify({data:{
+			res: 'error',
+			errors: [config.MSG_FORM_INVALID]
+		}}));
+	} catch (err){
+		console.log(err);
+	}
+});
+
 router.post('/user/updateProfile', async (req, res) => {
 	try {
 		let input = req.body;
@@ -199,48 +235,55 @@ router.post('/user/updateProfile', async (req, res) => {
 });
 
 router.post('/user/updateProfile/avatar', upload.single('Avatar'), async (req, res) => {
-	let user = await profile.verifyAccessToken(req.body.AccessToken);
-	if (user != null && user.Id != null){
-		if (req.file != null){
-			let avatar = await profile.userUpdateAvatar(user.Id, req.file.filename);
-			res.send(JSON.stringify({data: {
-				res: 'Success',
-				msg: 'Profile Updated',
-				Avatar: avatar
-			}}))
-		} else res.send(JSON.stringify({data: {
-			res: 'error',
-			errors: ["Invalid file type"]
-		}}))
-	} else res.send(JSON.stringify({data: {
-		res: 'error',
-		errors: user
-	}}))
-})
-
-router.post('/user/updateProfile/gallery', async (req, res) => {
-	let user = await profile.verifyAccessToken(req.body.AccessToken);
-	if (user != null && user.Id != null){
-		if (req.file != null && req.body.Key != null){
-			if (user.Images == null)
-				user.Images = [null, null, null, null, null];
-			let result = await profile.userUpdateGallery(user.Id, req.file.filename, user.Images, req.body.key);
-			if (result != null)
+	try{
+		let user = await profile.verifyAccessToken(req.body.AccessToken);
+		if (user != null && user.Id != null){
+			if (req.file != null){
+				let avatar = await profile.userUpdateAvatar(user.Id, req.file.filename);
 				res.send(JSON.stringify({data: {
 					res: 'Success',
 					msg: 'Profile Updated',
-					Images: result
+					Avatar: avatar
 				}}))
+			} else res.send(JSON.stringify({data: {
+				res: 'error',
+				errors: ["Invalid file type"]
+			}}))
+		} else res.send(JSON.stringify({data: {
+			res: 'error',
+			errors: user
+		}}))
+	} catch (err){
+		console.log(err);
+	}
+})
+
+router.post('/user/updateProfile/gallery',upload.single('Image'), async (req, res) => {
+	try{
+		let user = await profile.verifyAccessToken(req.body.AccessToken);
+		if (user != null && user.Id != null){
+			if (req.file != null && req.body.Key != null){
+				if (user.Images == null)
+					user.Images = [];
+				let result = await profile.userUpdateGallery(user.Id, req.file.filename, JSON.parse(user.Images), req.body.Key);
+				if (result != null)
+					res.send(JSON.stringify({data: {
+						res: 'Success',
+						msg: 'Profile Updated',
+						Images: result
+					}}))
+			} else res.send(JSON.stringify({data: {
+				res:'error',
+				errors: ['File of invalid type']
+			}}))
 		} else res.send(JSON.stringify({data: {
 			res:'error',
-			errors: ['File of invalid type']
+			errors: [user]
 		}}))
-	} else res.send(JSON.stringify({data: {
-		res:'error',
-		errors: [user]
-	}}))
+	} catch (err){
+		console.log(err);
+	}
 });
-
 
 router.post('/user/passwordChange', async (req, res) => {
 	try{

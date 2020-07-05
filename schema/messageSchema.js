@@ -12,7 +12,7 @@ async function test(){
 	// let rest = await sql.readChatMessages(1,2);
 	// console.log(rest);
 }
-test();
+
 // returns null on success or an array of errors;
 async function sendChatMessage(accesstoken, to, msg){
 	if (from == null || to == null || msg == null)
@@ -31,12 +31,12 @@ async function sendChatMessage(accesstoken, to, msg){
 }
 
 //returns an array of chat messages or null
-async function readChat(accesstoken, receiverId){
-	if (accesstoken == null || from == null)
+async function readChat(accesstoken, withId){
+	if (accesstoken == null || withId == null)
 		return(null);
 	let user1 = await profile.verifyAccessToken(accesstoken);
 	if (user1 != null && user1.Id != null){
-		let result = await sql.readChatMessages(user1.Id, receiverId);
+		let result = await sql.readChatMessages(user1.Id, withId);
 		return(result);
 	} else return (user1);
 }
@@ -54,5 +54,5 @@ async function checkNewChatMessages(accesstoken){
 module.exports = {
 	sendChatMessage,
 	checkNewChatMessages,
-	readChat
+	readChat,
 }

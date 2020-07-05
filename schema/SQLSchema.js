@@ -65,7 +65,6 @@ async function newUser(user){
 			return null;
 		}else {
 			user.AccessTime = new Date();
-			console.log(user.AccessTime);
 			result = await insertUser(user);
 			console.log(`User added -> ${user.Username}`)
 			return (result);
@@ -199,7 +198,6 @@ async function findAccessToken(token){
 }
 
 async function stripHTML(string){
-	console.log(string);
 	if (string != null && string.length > 0){
 		// Remove style tags and content
 		string.replace(/<style[^>]*>.*<\/style>/gm, '')
@@ -211,6 +209,12 @@ async function stripHTML(string){
 		.replace(/([\r\n]+ +)+/gm, '');
 	}
 	return (string);
+}
+
+async function getConnexion(id){
+	let request = `SELECT Id, Username, Avatar FROM ${config.USERS_TABLE} WHERE Id=? AND DateDeleted IS NULL`
+	let res = await query(request, [id]);
+	return(res);
 }
 
 //CHAT
@@ -312,6 +316,6 @@ module.exports = {
 	checkNewChatMessages,
 	newUserNorification,
 	getUserNotifications,
-	clearUserNotifications
-
+	clearUserNotifications,
+	getConnexion
 }

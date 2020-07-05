@@ -6,13 +6,12 @@ const mail = require('./emailSchema');
 const gen = require('./generatorSchema');
 const moment = require('moment');
 const config = require('../config');
-const chat = require('./messageSchema');
 
 start();
 
 async function start(){
 	// await gen.generateUsers(25);
-	// likeAlot(3, 25);
+	// likeAlot(50, 25);
 	// viewAlot(3, 25);
 	// console.log(await findIds([1,2,3,4,5,6]));
 	// console.log(await viewUser(1, 6));
@@ -23,8 +22,8 @@ async function start(){
 async function likeAlot(n, maxUsers){
 	let i = 0;
 	while (i++ <= n){
-		let user = gen.getRandomInt(1, maxUsers);
-		let profileId = gen.getRandomInt(1, maxUsers);
+		let user = `${gen.getRandomInt(1, maxUsers)}`;
+		let profileId = `${gen.getRandomInt(1, maxUsers)}`;
 		if (user != profileId)
 			await likeUser(user, profileId);
 	}
@@ -33,8 +32,8 @@ async function likeAlot(n, maxUsers){
 async function viewAlot(n, maxUsers){
 	let i = 0;
 	while (i++ <= n){
-		let user = gen.getRandomInt(1, maxUsers);
-		let profileId = gen.getRandomInt(1, maxUsers);
+		let user = `${gen.getRandomInt(1, maxUsers)}`;
+		let profileId = `${gen.getRandomInt(1, maxUsers)}`;
 		if (user != profileId)
 			await viewProfile(user, profileId);
 	}
@@ -398,12 +397,16 @@ async function userUpdateAvatar(id, path){
 }
 
 async function userUpdateGallery(id, path, oldGallery, key){
-	let qry = `Images=?`
-	let imgPath = `http://${config.SERVER_ADDRESS}/uploads/${path}`;
-	let newGallery = oldGallery;
-	newGallery[key] = imgPath;
-	await sql.updateUser(id, qry, [oldGallery]);
-	return (oldGallery);
+	try{
+		let qry = `Images=?`
+		let imgPath = `http://${config.SERVER_ADDRESS}/uploads/${path}`;
+		let newGallery = oldGallery;
+		newGallery[key] = imgPath;
+		await sql.updateUser(id, qry, [JSON.stringify(newGallery)]);
+		return (newGallery);
+	} catch (err){
+		console.log(err);
+	}
 }
 //Returns null on success, array of errors on failure
 async function deleteUser(user){
@@ -536,7 +539,6 @@ async function findIds(idArray) {
 		  	return res;
 		})
 	  );
-	  console.log(users);
 	  if (users.length > 0) return users;
 	}
 	return null;
@@ -676,6 +678,21 @@ async function calculateDateDifference(future, past){
 	return (d);
 }
 
+async function getUserConnexions(accessToken){
+	let payload = [];
+	let user = await verifyAccessToken(accessToken);
+	if (user != null && user.Id != null){
+		for (const e of JSON.parse(user.LikedBy)){
+			if (JSON.parse(user.Liked).includes(e)){
+				let res = await sql.getConnexion(e)
+				if (res != null)
+					payload.push(res[0]);
+			}
+		}
+		return(payload)
+	} return([]);
+}
+
 module.exports = {
 	likeUser,
 	deleteUser,
@@ -697,5 +714,6 @@ module.exports = {
 	calculateDateDifference,
 	userPasswordChange,
 	userUpdateAvatar,
-	userUpdateGallery
+	userUpdateGallery,
+	getUserConnexions
 }
