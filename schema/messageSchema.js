@@ -15,7 +15,7 @@ async function test(){
 
 // returns null on success or an array of errors;
 async function sendChatMessage(accesstoken, to, msg){
-	if (from == null || to == null || msg == null)
+	if (accesstoken == null || to == null || msg == null)
 		return(config.MSG_FORM_INVALID);
 	let user1 = await profile.verifyAccessToken(accesstoken);
 	let user2 = await sql.findId(to);
@@ -23,7 +23,7 @@ async function sendChatMessage(accesstoken, to, msg){
 		if (user1.Liked != null && user1.Liked.includes(to)
 		&& user1.LikedBy != null && user1.LikedBy.includes(to)){
 			if (user2 != null && user2.Id != null){
-				let result = await sql.chatMessage(from, to, msg);
+				let result = await sql.sendChatMessage(user1.Id, user2.Id, msg);
 				return (null);
 			} else return(['Receiver is no longer an active user'])
 		} else return(['Users are not connexted']);

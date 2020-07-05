@@ -166,7 +166,8 @@ router.get('/user/profile', async (req, res) => {
 						SexualPreference: user.SexualPreference,
 						Avatar: user.Avatar,
 						Images: JSON.parse(user.Images),
-						Interests: user.Interests
+						Interests: user.Interests,
+						Biography: user.Biography
 					}
 				}))
 			} else 
@@ -213,6 +214,21 @@ router.get('/user/connexions', async (req, res) => {
 	} catch (err){
 		console.log(err);
 	}
+});
+
+router.post('/user/chat/new', async (req, res) => {
+	if (req.body != null && req.body.AccessToken != null && req.body.To != null 
+	&& req.body.Message != null){
+		await msg.sendChatMessage(req.body.AccessToken, req.body.To, req.body.Message);
+		let chat = await msg.readChat(req.body.AccessToken, req.body.To);
+		res.send(JSON.stringify({data:{
+			res: "Success",
+			Messages: chat
+		}}))
+	} else res.send(JSON.stringify({data:{
+		res: "error",
+		errors: [config.MSG_FORM_INVALID],
+	}}));
 });
 
 router.post('/user/updateProfile', async (req, res) => {
@@ -442,7 +458,7 @@ router.post('/user/like', async (req, res) => {
 	let data;
 	let user = await profile.verifyAccessToken(userData.AccessToken);
 	if (user != null && user.Id != null && userData.profileId != null){
-		data = await profile.likeUser(user.Id, userData.profileId);
+		data = await profile.likeUser(user.Id, Number(userData.profileId));
 		if (data === 1){
 			res.send(JSON.stringify({data:{
 				res: "Success",

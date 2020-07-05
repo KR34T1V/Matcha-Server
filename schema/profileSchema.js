@@ -22,8 +22,8 @@ async function start(){
 async function likeAlot(n, maxUsers){
 	let i = 0;
 	while (i++ <= n){
-		let user = `${gen.getRandomInt(1, maxUsers)}`;
-		let profileId = `${gen.getRandomInt(1, maxUsers)}`;
+		let user = gen.getRandomInt(1, maxUsers);
+		let profileId = gen.getRandomInt(1, maxUsers);
 		if (user != profileId)
 			await likeUser(user, profileId);
 	}
@@ -337,9 +337,16 @@ async function userUpdateProfile(user){
 				if (!verify.checkPreference(user.SexualPreference))
 					errors.push('Selected sexual preference is invalid');
 				else {	
-					build.push('SexualPreference=?')
+					build.push('SexualPreference=?');
 					form.push(user.SexualPreference);
 				}
+			}
+			if (user.Biography != data.Biography){
+				console.log(user.Biography)
+				let bio =  await sql.stripHTML(user.Biography);
+				console.log(bio);
+				build.push('Biography=?');
+				form.push(bio);
 			}
 
 			//EMAIL
@@ -681,7 +688,7 @@ async function calculateDateDifference(future, past){
 async function getUserConnexions(accessToken){
 	let payload = [];
 	let user = await verifyAccessToken(accessToken);
-	if (user != null && user.Id != null){
+	if (user != null && user.Id != null && user.LikedBy != null){
 		for (const e of JSON.parse(user.LikedBy)){
 			if (JSON.parse(user.Liked).includes(e)){
 				let res = await sql.getConnexion(e)
