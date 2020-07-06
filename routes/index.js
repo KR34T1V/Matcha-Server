@@ -74,68 +74,152 @@ router.get('/home', async (req, res) => {
 					return user;
 				})
 			)
-			res.send(JSON.stringify({ data: finalPayload}));
+			res.send(JSON.stringify({ data:
+				{ 
+					res: "Success",
+					people: finalPayload
+				}
+			}));
 		} else 
-			res.send(JSON.stringify({ errors: errors }));
+			res.send(JSON.stringify({ data:{
+				res: "Error",
+				errors: errors 
+			}
+			}));
 	} catch (err){
 		console.log(err);
+		res.send(JSON.stringify({ data:{
+			res: "Error",
+			errors: ["Oops pretend you did not see this"]
+		}
+		}));
 	}
 });
 
 router.post('/register', async (req, res) => {
-	//security checks
-	let data = await  profile.registerUser(req.body);
-	if (data == null){
-			data = await sql.findEmail(req.body.Email)
-		if (data != null && data.Id != null){
-			console.log(`${data.Id} registered`);
-			res.send(JSON.stringify({data: {
-				Result: "Success"
-			}}));
-		}
-	} else 
-		res.send(JSON.stringify({errors: data}));
+	try{
+		//security checks
+		let data = await  profile.registerUser(req.body);
+		if (data == null){
+				data = await sql.findEmail(req.body.Email)
+			if (data != null && data.Id != null){
+				console.log(`${data.Id} registered`);
+				res.send(JSON.stringify({data: {
+					res: "Success",
+					msg: "You successfully registered"
+				}}));
+			}
+		} else 
+			res.send(JSON.stringify({data:
+				{
+					res: "Error",
+					errors: data
+				}
+			}));
+	} catch (err){
+		console.log(err);
+		res.send(JSON.stringify({ data:
+			{
+			res: "Error",
+			errors: ["Oops pretend you did not see this"]
+			}
+		}));
+	}
 });
 
 router.post('/user/verifyEmail', async (req, res)=> {
-	if (req.body != null && req.body.Email != null && req.body.VerifyKey != null){
-		let result = await profile.verifyUserEmail(req.body.Email, req.body.VerifyKey);
-		if (result == null){
-			res.send(JSON.stringify({data:{
-				result : "Success"}}));
-		} else {
-			res.send(JSON.stringify(result));
-		}
-	} else res.send(JSON.stringify({data:{
-		errors: [config.MSG_FORM_INVALID]
-	}}));
+	try{
+		if (req.body != null && req.body.Email != null && req.body.VerifyKey != null){
+			let result = await profile.verifyUserEmail(req.body.Email, req.body.VerifyKey);
+			if (result == null){
+				res.send(JSON.stringify({data:
+					{
+					res: "Success",
+					msg: "Email successfully verified" 
+					}
+				}));
+			} else {
+				res.send(JSON.stringify({data:
+					{
+						res: "Error",
+						errors: result
+					}
+				}));
+			}
+		} else res.send(JSON.stringify({data:
+			{
+				res: "Error",
+				errors: [config.MSG_FORM_INVALID]
+			}
+		}));
+	} catch (err){
+		console.log(err);
+		res.send(JSON.stringify({ data:
+			{
+			res: "Error",
+			errors: ["Oops pretend you did not see this"]
+			}
+		}));
+	}
 })
 
 router.post('/user/verifyEmail/email', async (req, res) => {
-	if (req.body != null && req.body.Email != null){
-		await profile.resendVerifyEmail(req.body.Email);
-		res.send(JSON.stringify({data:{
-			result: "Success" }}));
-	} else {
-		res.send(JSON.stringify({data:{
-			errors: ["Well, I think we messed up if you see this, please continue like this never happened"]
-		}}))
+	try{
+		if (req.body != null && req.body.Email != null){
+			await profile.resendVerifyEmail(req.body.Email);
+			res.send(JSON.stringify({data:
+				{
+				res: "Success",
+				msg: "Email sent"
+				}
+			}));
+		} else {
+			res.send(JSON.stringify({data:
+				{
+					res: "Error",
+					errors: ["Well, I think we messed up if you see this, please continue like this never happened"]
+				}
+			}))
+		}
+	} catch (err){
+		console.log(err);
+		res.send(JSON.stringify({ data:
+			{
+				res: "Error",
+				errors: ["Oops pretend you did not see this"]
+			}
+		}));
 	}
 })
 
 router.post('/login', async (req, res) => {
-	let data = await profile.loginUser(req.body)
-	if (data != null && data.Id != null){
-		res.send(JSON.stringify({
-			data:{
-				AccessToken: data.AccessToken,
-				Verified: data.DateVerified != null ? true : false
+	try{
+		let data = await profile.loginUser(req.body)
+		if (data != null && data.Id != null){
+			res.send(JSON.stringify({data:
+				{
+					res: "Success",
+					msg: "You logged in successfully",
+					AccessToken: data.AccessToken,
+					Verified: data.DateVerified != null ? true : false
+				}
+			}));
+		} else {
+			res.send(JSON.stringify({ data:
+				{
+					res: "Errors",
+					errors: data
+				}
+			}));
+		}
+	} catch (err){
+		console.log(err);
+		res.send(JSON.stringify({ data:
+			{
+			res: "Error",
+			errors: ["Oops pretend you did not see this"]
 			}
 		}));
-	} else {
-		res.send(JSON.stringify({ data: {
-			errors: data
-		}}));
 	}
 });
 
@@ -143,43 +227,57 @@ router.get('/logout', async (req, res) => {
 	try {
 		let data = req.query;
 		if (await profile.logoutUser(data.AccessToken)){
-			res.send(JSON.stringify({
-				data:{
-					Result: "Success"
+			res.send(JSON.stringify({data:
+				{
+					res: "Success",
+					msg: "Successfully logged out"
 				}
 			}));
 		}
 	} catch (err){
 		console.log(err);
+		res.send(JSON.stringify({ data:
+			{
+			res: "Error",
+			errors: ["Oops pretend you did not see this"]
+			}
+		}));
 	}
 })
 
 router.get('/user/profile', async (req, res) => {
 	try{
-		if (req.query != null && req.query.AccessToken != null){
-			let user = await profile.verifyAccessToken(req.query.AccessToken);
-			if (user != null && user.Id != null){
-				res.send(JSON.stringify({
-					data: {
-						Username: user.Username,
-						Firstname: user.Firstname,
-						Lastname: user.Lastname,
-						Email: user.Email,
-						Gender: user.Gender,
-						SexualPreference: user.SexualPreference,
-						Avatar: user.Avatar,
-						Images: JSON.parse(user.Images),
-						Interests: user.Interests,
-						Biography: user.Biography
-					}
-				}))
-			} else 
-			res.send(JSON.stringify({
-				errors: ["Access Token Expired"]
+		let user = await profile.verifyAccessToken(req.query.AccessToken);
+		if (user != null && user.Id != null){
+			res.send(JSON.stringify({data:
+				{
+					res: "Success",
+					Username: user.Username,
+					Firstname: user.Firstname,
+					Lastname: user.Lastname,
+					Email: user.Email,
+					Gender: user.Gender,
+					SexualPreference: user.SexualPreference,
+					Avatar: user.Avatar,
+					Images: JSON.parse(user.Images),
+					Interests: JSON.parse(user.Interests),
+					Biography: user.Biography
+				}
 			}))
-		}
-	} catch(err){
+		} else res.send(JSON.stringify({data:
+			{
+				res:"Error",
+				errors: user
+			}
+		}))
+	} catch (err){
 		console.log(err);
+		res.send(JSON.stringify({ data:
+			{
+			res: "Error",
+			errors: ["Oops pretend you did not see this"]
+			}
+		}));
 	}
 })
 
@@ -188,17 +286,26 @@ router.get('/user/chat', async (req, res) => {
 		if (req.query != null && req.query.AccessToken != null && req.query.Id != null){
 			let chat = await msg.readChat(req.query.AccessToken, req.query.Id);
 			let user = await sql.findId(req.query.Id);
-			res.send(JSON.stringify({data: {
-				res:'Success',
-				Username: user.Username,
-				Chat: chat
-			}}))
+			res.send(JSON.stringify({data:
+				{
+					res:'Success',
+					msg: "Chat retrieved",
+					Username: user.Username,
+					Chat: chat
+				}
+			}))
 		} else res.send(JSON.stringify({data: {
-			res: 'error',
+			res: 'Error',
 			errors: [config.MSG_FORM_INVALID]
 		}}))
 	} catch (err){
 		console.log(err);
+		res.send(JSON.stringify({ data:
+			{
+			res: "Error",
+			errors: ["Oops pretend you did not see this"]
+			}
+		}));
 	}
 })
 
