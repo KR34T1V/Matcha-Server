@@ -669,8 +669,8 @@ async function calculateUserFame(user){
 	let fame = 0;
 	if (user != null)
 		if (user.ViewedBy != null && user.LikedBy != null)
-			fame = (user.LikedBy.length/user.ViewedBy.length)*100;
-	return (fame);
+			fame = (JSON.parse(user.LikedBy).length/JSON.parse(user.ViewedBy).length)*100;
+	return (Math.round(fame));
 }
 
 async function calculateUserAge(user){

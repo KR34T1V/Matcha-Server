@@ -45,7 +45,9 @@ router.get('/home', async (req, res) => {
 					payload = payload.filter(e=> e.Avatar != null);
 					//hide users that are blocked
 					if (user.Blocked != null && user.Blocked.length > 0)
-						payload = payload.filter(e=> !user.BlockedUsers.includes(e))
+						payload = payload.filter((e) => {
+							return user.BlockedUsers.includes(e) ? null : e
+						})
 				} else errors.push("Failed to get users");
 			} else errors.push("Invalid access token");
 		} else errors.push("Access token missing");
@@ -55,7 +57,7 @@ router.get('/home', async (req, res) => {
 		//age
 		//location
 		//fame
-		//iterest ltags
+		//iterest tags
 		//build response
 		if (payload != null && errors.length == 0){
 			const finalPayload = await Promise.all(
