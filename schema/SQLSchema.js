@@ -232,7 +232,7 @@ async function readChatMessages(senderId, receiverId){
 	try{
 		let request = `SELECT FromId, Viewed, Message FROM ${config.CHAT_TABLE} WHERE (FromId=? AND ToId=?) OR (FromId=? AND ToId=?) ORDER BY TimeStamp`;
 		let res = await query(request, [senderId, receiverId, receiverId, senderId]);
-		request = `UPDATE ${config.CHAT_TABLE} SET Viewed=True WHERE ToId=?`
+		request = `UPDATE ${config.CHAT_TABLE} SET Viewed=TRUE WHERE ToId=?`
 		await query(request, [receiverId]);
 		return(res);
 	} catch (err){
@@ -264,8 +264,10 @@ async function newUserNorification(FromId, ToId, message){
 
 async function getUserNotifications(userId){
 	try{
-		let request = `SELECT Message Viewed FROM ${config.NOTIFY_TABLE} WHERE Id=? ORDER BY TimeStamp`
+		let request = `SELECT Id, Username, Avatar, Message, Viewed, "Profile" AS Type FROM ${config.NOTIFY_TABLE} INNER JOIN ${config.USERS_TABLE} \
+		ON  ${config.NOTIFY_TABLE}.FromId = ${config.USERS_TABLE}.Id WHERE ToId=? ORDER BY TimeStamp`;
 		let result = await query(request, [userId]);
+		console.log(result);
 		return(result);
 	} catch (err){
 		console.log(err);
@@ -274,7 +276,7 @@ async function getUserNotifications(userId){
 
 async function clearUserNotifications(userId){
 	try{
-		let request = `DELETE FROM ${config.NOTIFY_TABLE} WHERE Id=? AND Viewed=TRUE`;
+		let request = `DELETE FROM ${config.NOTIFY_TABLE} WHERE ToId=? AND Viewed=TRUE`;
 		let result = await query(request, [userId]);
 		return(result);
 	} catch (err){

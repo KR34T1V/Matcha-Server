@@ -61,6 +61,9 @@ async function registerUser(user){
 			errors.push('Selected sexual preference is invalid');
 		if (!verify.checkEmail(user.Email))
 			errors.push('Invalid email address');
+		else if (await sql.findEmail(user.Email) != null){
+			errors.push('Email address already in use');
+		}
 		if (!verify.checkPassword(user.Password))
 			errors.push('Password must contain: \'uppercase\', \'lowercase\', \'numeric\', \'special\' characters');
 		if (!verify.checkRePassword(user.Password, user.RePassword))

@@ -7,6 +7,7 @@ const filter = require('../schema/filterSchema');
 const g = require('../schema/generalSchema');
 const config = require('../config');
 const msg = require('../schema/messageSchema');
+const notify = require('../schema/notificationSchema');
 const multer = require("multer");
 const storage = multer.diskStorage({
 	destination: function (req, file, cb){
@@ -199,6 +200,26 @@ router.get('/user/chat', async (req, res) => {
 	}
 })
 
+router.get('/user/notifications', async (req, res) => {
+	try{
+		let notifications = await notify.readNotifications(req.query.AccessToken);
+		//let chats = await msg.checkNewChatMessages(req.query.AccessToken);
+		res.send(JSON.stringify({data:{
+			res:"Success",
+			notifications
+		}}));
+		//id
+		//avatar
+		//username
+		//message
+		//notification type
+
+	} catch(err){
+		console.log(err);
+	}
+	
+});
+
 router.get('/user/connexions', async (req, res) => {
 	try{
 		if (req.query != null && req.query.AccessToken != null){
@@ -281,7 +302,8 @@ router.post('/user/updateProfile/gallery',upload.single('Image'), async (req, re
 			if (req.file != null && req.body.Key != null){
 				if (user.Images == null)
 					user.Images = [];
-				let result = await profile.userUpdateGallery(user.Id, req.file.filename, JSON.parse(user.Images), req.body.Key);
+				else user.Images = JSON.parse(user.Images);
+				let result = await profile.userUpdateGallery(user.Id, req.file.filename, user.Images, req.body.Key);
 				if (result != null)
 					res.send(JSON.stringify({data: {
 						res: 'Success',
