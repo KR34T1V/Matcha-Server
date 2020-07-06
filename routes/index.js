@@ -315,18 +315,25 @@ router.get('/user/notifications', async (req, res) => {
 		let chats = await msg.checkNewChatMessages(req.query.AccessToken);
 		let notifications;
 		other != null ? notifications = other.concat(chats) : notifications = chats;
-		res.send(JSON.stringify({data:{
-			res:"Success",
-			notifications
-		}}));
-		//id
-		//avatar
-		//username
-		//message
-		//notification type
-
-	} catch(err){
+		if (notifications != null){
+			res.send(JSON.stringify({data:{
+				res:"Success",
+				notifications
+			}}));
+		} else res.send(JSON.stringify({ data:
+			{
+				res: "Error",
+				errors: ["Oops we did not expect this to ever happen"]
+			}
+		}));
+	} catch (err){
 		console.log(err);
+		res.send(JSON.stringify({ data:
+			{
+			res: "Error",
+			errors: ["Oops pretend you did not see this"]
+			}
+		}));
 	}
 	
 });
@@ -335,32 +342,54 @@ router.get('/user/connexions', async (req, res) => {
 	try{
 		if (req.query != null && req.query.AccessToken != null){
 			let connexions = await profile.getUserConnexions(req.query.AccessToken);
-			res.send(JSON.stringify({data:{
-				res: 'Success',
-				Connexions: connexions
-			}}));
+			res.send(JSON.stringify({data:
+				{
+					res: 'Success',
+					Connexions: connexions
+				}
+			}));
 		} else res.send(JSON.stringify({data:{
-			res: 'error',
+			res: 'Error',
 			errors: [config.MSG_FORM_INVALID]
 		}}));
 	} catch (err){
 		console.log(err);
+		res.send(JSON.stringify({ data:
+			{
+			res: "Error",
+			errors: ["Oops pretend you did not see this"]
+			}
+		}));
 	}
 });
 
 router.post('/user/chat/new', async (req, res) => {
-	if (req.body != null && req.body.AccessToken != null && req.body.To != null 
-	&& req.body.Message != null){
-		await msg.sendChatMessage(req.body.AccessToken, req.body.To, req.body.Message);
-		let chat = await msg.readChat(req.body.AccessToken, req.body.To);
-		res.send(JSON.stringify({data:{
-			res: "Success",
-			Messages: chat
-		}}))
-	} else res.send(JSON.stringify({data:{
-		res: "error",
-		errors: [config.MSG_FORM_INVALID],
-	}}));
+	try{
+		if (req.body != null && req.body.AccessToken != null && req.body.To != null 
+		&& req.body.Message != null){
+			await msg.sendChatMessage(req.body.AccessToken, req.body.To, req.body.Message);
+			let chat = await msg.readChat(req.body.AccessToken, req.body.To);
+			res.send(JSON.stringify({data:
+				{
+					res: "Success",
+					Messages: chat
+				}
+			}))
+		} else res.send(JSON.stringify({data:
+			{
+				res: "Error",
+				errors: [config.MSG_FORM_INVALID],
+			}
+		}));
+	} catch (err){
+		console.log(err);
+		res.send(JSON.stringify({ data:
+			{
+			res: "Error",
+			errors: ["Oops pretend you did not see this"]
+			}
+		}));
+	}
 });
 
 router.post('/user/updateProfile', async (req, res) => {
@@ -368,17 +397,28 @@ router.post('/user/updateProfile', async (req, res) => {
 		let input = req.body;
 		let result = await profile.userUpdateProfile(input);
 		if (result === null){
-			res.send(JSON.stringify({data:{
-				result: 'Success',
-				msg: 'Profile Saved'
-			}}));
+			res.send(JSON.stringify({data:
+				{
+					res: 'Success',
+					msg: 'Profile Saved'
+				}
+			}));
 		} else {
-			res.send(JSON.stringify({data:{
-				errors: result
-			}}))
+			res.send(JSON.stringify({data:
+				{
+					res: "Error",
+					errors: result
+				}
+			}))
 		}
-	}catch(err){
-		console.log (err);
+	} catch (err){
+		console.log(err);
+		res.send(JSON.stringify({ data:
+			{
+			res: "Error",
+			errors: ["Oops pretend you did not see this"]
+			}
+		}));
 	}
 });
 
@@ -390,19 +430,25 @@ router.post('/user/updateProfile/avatar', upload.single('Avatar'), async (req, r
 				let avatar = await profile.userUpdateAvatar(user.Id, req.file.filename);
 				res.send(JSON.stringify({data: {
 					res: 'Success',
-					msg: 'Profile Updated',
+					msg: 'Avatar updated',
 					Avatar: avatar
 				}}))
 			} else res.send(JSON.stringify({data: {
-				res: 'error',
+				res: 'Error',
 				errors: ["Invalid file type"]
 			}}))
 		} else res.send(JSON.stringify({data: {
-			res: 'error',
+			res: 'Error',
 			errors: user
 		}}))
 	} catch (err){
 		console.log(err);
+		res.send(JSON.stringify({ data:
+			{
+			res: "Error",
+			errors: ["Oops pretend you did not see this"]
+			}
+		}));
 	}
 })
 
@@ -416,21 +462,33 @@ router.post('/user/updateProfile/gallery',upload.single('Image'), async (req, re
 				else user.Images = JSON.parse(user.Images);
 				let result = await profile.userUpdateGallery(user.Id, req.file.filename, user.Images, req.body.Key);
 				if (result != null)
-					res.send(JSON.stringify({data: {
-						res: 'Success',
-						msg: 'Profile Updated',
-						Images: result
-					}}))
-			} else res.send(JSON.stringify({data: {
-				res:'error',
-				errors: ['File of invalid type']
-			}}))
-		} else res.send(JSON.stringify({data: {
-			res:'error',
-			errors: [user]
-		}}))
+					res.send(JSON.stringify({data:
+						{
+							res: 'Success',
+							msg: 'Gallery updated',
+							Images: result
+						}
+					}))
+			} else res.send(JSON.stringify({data:
+				{
+					res:'Error',
+					errors: ['File of invalid type']
+				}
+			}))
+		} else res.send(JSON.stringify({data:
+			{
+				res:'Error',
+				errors: user
+			}
+		}))
 	} catch (err){
 		console.log(err);
+		res.send(JSON.stringify({ data:
+			{
+			res: "Error",
+			errors: ["Oops pretend you did not see this"]
+			}
+		}));
 	}
 });
 
@@ -441,110 +499,213 @@ router.post('/user/passwordChange', async (req, res) => {
 			let result = await profile.userPasswordChange(input.AccessToken, input.Password,
 				input.NewPassword, input.RePassword);
 			if (result == null){
-				res.send(JSON.stringify({data:{
-					result: 'Success'
-				}}));
+				res.send(JSON.stringify({data:
+					{
+						res: 'Success',
+						msg: "Password changed"
+					}
+				}));
 			} else {
-				res.send(JSON.stringify({data: {
-					errors: result
-				}}));
+				res.send(JSON.stringify({data: 
+					{
+						res: 'Error',
+						errors: result
+					}
+				}));
 			}
 		}
 
-	}catch(err){
+	} catch (err){
 		console.log(err);
+		res.send(JSON.stringify({ data:
+			{
+			res: "Error",
+			errors: ["Oops pretend you did not see this"]
+			}
+		}));
 	}
 })
 
 router.get('/view/profile', async (req, res) => {
-	let AccessToken = req.query.AccessToken;
-	let ProfileId = req.query.ProfileId;
-	let user = await profile.verifyAccessToken(AccessToken);
-	if (user != null && user.Id != null){
-		let result = await profile.viewProfile(user.Id, ProfileId);
-		if (result != null && result.Id != null){
-			res.send(JSON.stringify({data:
+	try{
+		let AccessToken = req.query.AccessToken;
+		let ProfileId = req.query.ProfileId;
+		let user = await profile.verifyAccessToken(AccessToken);
+		if (user != null && user.Id != null){
+			let result = await profile.viewProfile(user.Id, ProfileId);
+			if (result != null && result.Id != null){
+				res.send(JSON.stringify({data:
+				{
+					res: "Success",
+					Username: result.Username,
+					Firstname: result.Firstname,
+					Lastname: result.Lastname,
+					Gender: result.Gender,
+					SexualPreference: result.SexualPreference,
+					Age: await profile.calculateUserAge(result),
+					Biography: result.Biography,
+					Interests: JSON.parse(result.Interests),
+					Location: JSON.parse(result.Location),
+					Fame: await profile.calculateUserFame(result),
+					Avatar: result.Avatar,
+					Images: JSON.parse(result.Images),
+					AccessTime: result.AccessTime,
+					Liked: result.LikedBy != null ? (result.LikedBy.includes(user.Id) ? true : false) : false,
+					Blocked: user.BlockedUsers != null ? (user.BlockedUsers.includes(result.Id) ? true : false) : false
+				}}));
+			} else res.send(JSON.stringify({data:
+				{
+					res: "Error",
+					errors: user
+				}
+			}))
+		} else res.send(JSON.stringify({data:
 			{
-				Username: result.Username,
-				Firstname: result.Firstname,
-				Lastname: result.Lastname,
-				Gender: result.Gender,
-				SexualPreference: result.SexualPreference,
-				Age: await profile.calculateUserAge(result),
-				Biography: result.Biography,
-				Interests: JSON.parse(result.Interests),
-				Location: JSON.parse(result.Location),
-				Fame: await profile.calculateUserFame(result),
-				Avatar: result.Avatar,
-				Images: JSON.parse(result.Images),
-				AccessTime: result.AccessTime,
-				Liked: result.LikedBy != null ? (result.LikedBy.includes(user.Id) ? true : false) : false,
-				Blocked: user.BlockedUsers != null ? (user.BlockedUsers.includes(result.Id) ? true : false) : false
-			}}));
-		} else res.send(JSON.stringify({data:{errors: user}}))
-	} else res.send(JSON.stringify({data:{errors: ['Failed to retrieve profile.']}}))
+				res: "Error",
+				errors: ['Failed to retrieve profile.']
+			}
+		}))
+	} catch (err){
+		console.log(err);
+		res.send(JSON.stringify({ data:
+			{
+			res: "Error",
+			errors: ["Oops pretend you did not see this"]
+			}
+		}));
+	}
 })
 
 router.get('/getProfileViews', async (req, res)=>{
-	let data = req.query;
-	let tmp;
-	let payload = [];
-	if (data != null && data.AccessToken != null){
-		let ret = await profile.verifyAccessToken(data.AccessToken);
-		if (ret != null && ret.Id != null){
-			let views = JSON.parse(ret.ViewedBy);
-			if (views != null && views.length > 0){
-				await g.asyncForEach(views, async (val)=>{
-					let tmp_user = {};
-					tmp = await sql.findId(val);
-					if (tmp != null && tmp.Id != null){
-						tmp_user.Id = tmp.Id;
-						tmp_user.Username = tmp.Username;
-						tmp_user.Fame = await profile.calculateUserFame(tmp);
-						payload.push(tmp_user);
+	try {
+		let data = req.query;
+		let tmp;
+		let payload = [];
+		if (data != null && data.AccessToken != null){
+			let ret = await profile.verifyAccessToken(data.AccessToken);
+			if (ret != null && ret.Id != null){
+				let views = JSON.parse(ret.ViewedBy);
+				if (views != null && views.length > 0){
+					await g.asyncForEach(views, async (val)=>{
+						let tmp_user = {};
+						tmp = await sql.findId(val);
+						if (tmp != null && tmp.Id != null){
+							tmp_user.Id = tmp.Id;
+							tmp_user.Username = tmp.Username;
+							tmp_user.Fame = await profile.calculateUserFame(tmp);
+							payload.push(tmp_user);
+						}
+					});
+				}
+				res.send({data:
+					{
+						res: "Success",
+						Viewers: payload
 					}
 				});
+			} else res.send({data:
+				{
+					res: "Error",
+					errors: ret
+				}
+			});
+		} else res.send({data:
+			{	
+				res: "Error",
+				errors: [config.MSG_FORM_INVALID]
 			}
-			res.send({data:payload});
-		} else res.send({errors: ["Invalid Access Token"]});
-	} else res.send({errors: ["Invalid Form"]});
+		});
+	} catch (err){
+		console.log(err);
+		res.send(JSON.stringify({ data:
+			{
+			res: "Error",
+			errors: ["Oops pretend you did not see this"]
+			}
+		}));
+	}
 })
 
 router.get('/getProfileLikes', async (req, res)=>{
-	let data = req.query;
-	let tmp;
-	let payload = [];
-	if (data != null && data.AccessToken != null){
-		let ret = await profile.verifyAccessToken(data.AccessToken);
-		if (ret != null && ret.Id != null){
-			let likes = JSON.parse(ret.LikedBy);
-			if (likes != null && likes.length > 0){
-				await g.asyncForEach(likes, async (val)=>{
-					let tmp_user = {};
-					tmp = await sql.findId(val);
-					if (tmp != null && tmp.Id != null){
-						tmp_user.Id = tmp.Id;
-						tmp_user.Username = tmp.Username;
-						tmp_user.Fame = await profile.calculateUserFame(tmp);
-						payload.push(tmp_user);
+	try{
+		let data = req.query;
+		let tmp;
+		let payload = [];
+		if (data != null && data.AccessToken != null){
+			let ret = await profile.verifyAccessToken(data.AccessToken);
+			if (ret != null && ret.Id != null){
+				let likes = JSON.parse(ret.LikedBy);
+				if (likes != null && likes.length > 0){
+					await g.asyncForEach(likes, async (val)=>{
+						let tmp_user = {};
+						tmp = await sql.findId(val);
+						if (tmp != null && tmp.Id != null){
+							tmp_user.Id = tmp.Id;
+							tmp_user.Username = tmp.Username;
+							tmp_user.Fame = await profile.calculateUserFame(tmp);
+							payload.push(tmp_user);
+						}
+					})
+				}
+				res.send(JSON.stringify({data:
+					{
+						res: "Success",
+						Likers:payload
 					}
-				})
+				}));
+			} else res.send(JSON.stringify({data:
+				{
+					res: "Error",
+					errors: ret
+				}
+			}));
+		} else res.send(JSON.stringify({data:
+			{
+				res: "Error",
+				errors: [config.MSG_FORM_INVALID]
 			}
-			res.send(JSON.stringify({data:payload}));
-		} else res.send(JSON.stringify({errors: ["Invalid Access Token"]}));
-	} else res.send(JSON.stringify({errors: ["Invalid Form"]}));
+		}));
+	} catch (err){
+		console.log(err);
+		res.send(JSON.stringify({ data:
+			{
+			res: "Error",
+			errors: ["Oops pretend you did not see this"]
+			}
+		}));
+	}
 })
 
 router.post('/user/passwordReset', async (req, res) => {
-	let bod = req.body
-	if (bod != null){
-		let result = await profile.resetUserPassword(bod.Email, 
-			bod.Password, bod.RePassword, bod.VerifyKey);
-		//success
-		if (result == null)
-			res.send("Success");
-		else
-			res.send(result);
+	try {
+		let bod = req.body
+		if (bod != null){
+			let result = await profile.resetUserPassword(bod.Email, 
+				bod.Password, bod.RePassword, bod.VerifyKey);
+			//success
+			if (result == null)
+				res.send(JSON.stringify({ data:
+					{
+					res: "Success",
+					msg: "Password reset"
+					}
+				}));
+			else
+			res.send(JSON.stringify({ data:
+				{
+				res: "Error",
+				errors: result
+				}
+			}));
+		}
+	} catch (err){
+		console.log(err);
+		res.send(JSON.stringify({ data:
+			{
+			res: "Error",
+			errors: ["Oops pretend you did not see this"]
+			}
+		}));
 	}
 });
 
@@ -554,77 +715,150 @@ router.post('/user/passwordReset/email', async (req, res) => {
 			const email = req.body.Email;
 			let data = await profile.resetPasswordEmail(email);
 			if (data == null){
-				res.send(JSON.stringify({ data: {
-					result: "Success",
-				}}));
+				res.send(JSON.stringify({ data:
+					{
+					res: "Success",
+					msg: "Email Sent"
+					}
+				}));
 			} else {
-				res.send(JSON.stringify({ data: {
-					errors: data 
-				}}))
+				res.send(JSON.stringify({ data:
+					{
+					res: "Error",
+					errors: data
+					}
+				}));
 			}
 		} else {
-			res.send(JSON.stringify({ data: {
-				errors: ["Oops something went wrong!"],
-			}}));
+			res.send(JSON.stringify({ data:
+				{
+				res: "Error",
+				errors: [config.MSG_FORM_INVALID]
+				}
+			}));
 		}
 	} catch (err){
 		console.log(err);
+		res.send(JSON.stringify({ data:
+			{
+			res: "Error",
+			errors: ["Oops pretend you did not see this"]
+			}
+		}));
 	}
 })
 
 router.get('/user/delete', async (req, res) => {
-	let userData = req.body;
-	let data;
-
-	if (userData != null)
-		data = await profile.deleteUser(userData);
-		if (data == null)
-			res.send({data:{
-				res: "Success"
-			}});
-		else 
-			res.send({data:{'errors': data}})
+	try{
+		let userData = req.body;
+		let data;
+	
+		if (userData != null){
+			data = await profile.deleteUser(userData);
+			if (data == null)
+				res.send(JSON.stringify({ data:
+					{
+					res: "Success",
+					msg: "Account deleted"
+					}
+				}));
+			else 
+				res.send(JSON.stringify({ data:
+					{
+					res: "Error",
+					errors: data
+					}
+				}));
+		}
+	} catch (err){
+		console.log(err);
+		res.send(JSON.stringify({ data:
+			{
+			res: "Error",
+			errors: ["Oops pretend you did not see this"]
+			}
+		}));
+	}
 });
 
 router.post('/user/like', async (req, res) => {
-	let userData = req.body;
-	let data;
-	let user = await profile.verifyAccessToken(userData.AccessToken);
-	if (user != null && user.Id != null && userData.profileId != null){
-		data = await profile.likeUser(user.Id, Number(userData.profileId));
-		if (data === 1){
-			res.send(JSON.stringify({data:{
-				res: "Success",
-				msg: "Liked User"
-			}}));
-		} else if (data === -1){
-			res.send(JSON.stringify({data:{
-				res: "Success",
-				msg: "Disliked User"
-			}}));
-		} else res.send(JSON.stringify({data:{errors: ["Oops something went Wrong"]}}));
-	} else res.send(JSON.stringify({data: {errors:  ["Oops something went Wrong"]}}));
+	try{
+		let userData = req.body;
+		let data;
+		let user = await profile.verifyAccessToken(userData.AccessToken);
+		if (user != null && user.Id != null && userData.profileId != null){
+			data = await profile.likeUser(user.Id, Number(userData.profileId));
+			if (data === 1){
+				res.send(JSON.stringify({data:{
+					res: "Success",
+					msg: "Liked User"
+				}}));
+			} else if (data === -1){
+				res.send(JSON.stringify({data:{
+					res: "Success",
+					msg: "Disliked User"
+				}}));
+			} else res.send(JSON.stringify({data:
+				{
+					res: "Error",
+					errors: ["Oops something went Wrong"]
+				}
+			}));
+		} else res.send(JSON.stringify({data:
+			{
+				res: "Error",
+				errors: user
+			}
+		}));
+	} catch (err){
+		console.log(err);
+		res.send(JSON.stringify({ data:
+			{
+			res: "Error",
+			errors: ["Oops pretend you did not see this"]
+			}
+		}));
+	}
 });
 
 router.post('/user/block', async (req, res) => {
-	let userData = req.body;
-	let data;
-	let user = await profile.verifyAccessToken(userData.AccessToken);
-	console.log(userData);
-	if (user != null && user.Id != null && userData.profileId != null){
-		data = await profile.blockUser(user.Id, userData.profileId);
-		if (data === 1){
-			res.send(JSON.stringify({data:{
-				res: "Success",
-				msg: "Blocked User"
-			}}));
-		} else if (data === -1){
-			res.send(JSON.stringify({data:{
-				res: "Success",
-				msg: "Unblocked User"
-			}}));
-		} else res.send(JSON.stringify({data:{errors: ["Oops something went Wrong"]}}));
-	} else res.send(JSON.stringify({data: {errors:  ["Oops something went Wrong"]}}));
+	try{
+		let userData = req.body;
+		let data;
+		let user = await profile.verifyAccessToken(userData.AccessToken);
+		if (user != null && user.Id != null && userData.profileId != null){
+			data = await profile.blockUser(user.Id, userData.profileId);
+			if (data === 1){
+				res.send(JSON.stringify({data:{
+					res: "Success",
+					msg: "Blocked User"
+				}}));
+			} else if (data === -1){
+				res.send(JSON.stringify({data:{
+					res: "Success",
+					msg: "Unblocked User"
+				}}));
+			} else res.send(JSON.stringify({data:
+				{
+					res: "Error",
+					errors: ["Oops something went Wrong"]
+				}
+			}));
+		} else res.send(JSON.stringify({data: 
+			{
+				res: "Error",
+				errors: user
+			}
+		}));
+	} catch (err){
+		console.log(err);
+		res.send(JSON.stringify({ data:
+			{
+			res: "Error",
+			errors: ["Oops pretend you did not see this"]
+			}
+		}));
+	}
 });
 
 module.exports = router;
