@@ -202,8 +202,10 @@ router.get('/user/chat', async (req, res) => {
 
 router.get('/user/notifications', async (req, res) => {
 	try{
-		let notifications = await notify.readNotifications(req.query.AccessToken);
-		//let chats = await msg.checkNewChatMessages(req.query.AccessToken);
+		let other = await notify.readNotifications(req.query.AccessToken);
+		let chats = await msg.checkNewChatMessages(req.query.AccessToken);
+		let notifications;
+		other != null ? notifications = other.concat(chats) : notifications = chats;
 		res.send(JSON.stringify({data:{
 			res:"Success",
 			notifications
@@ -366,7 +368,7 @@ router.get('/view/profile', async (req, res) => {
 				Fame: await profile.calculateUserFame(result),
 				Avatar: result.Avatar,
 				Images: JSON.parse(result.Images),
-				LastOnline: result.AccessTime,
+				AccessTime: result.AccessTime,
 				Liked: result.LikedBy != null ? (result.LikedBy.includes(user.Id) ? true : false) : false,
 				Blocked: user.BlockedUsers != null ? (user.BlockedUsers.includes(result.Id) ? true : false) : false
 			}}));

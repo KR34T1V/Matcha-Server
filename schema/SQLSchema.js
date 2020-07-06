@@ -242,9 +242,9 @@ async function readChatMessages(senderId, receiverId){
 
 async function checkNewChatMessages(userId){
 	try{
-		let request1 = `SELECT FromId FROM ${config.CHAT_TABLE} WHERE ToId=? AND Viewed=FALSE ORDER BY TimeStamp`;
-		let request2 = `SELECT Id, Username, Avatar FROM ${config.USERS_TABLE} WHERE Id IN (${request1}) AND Id!=? AND DateDeleted IS NULL`
-		let rest = await query(request2, [userId, userId]);
+		let request = `SELECT Id, Username, Avatar, CONCAT("Sent You a message: ", Message) AS Message, Viewed, "Chat" AS Type FROM ${config.CHAT_TABLE} INNER JOIN ${config.USERS_TABLE} \
+		ON  ${config.CHAT_TABLE}.FromId = ${config.USERS_TABLE}.Id WHERE ToId=? ORDER BY TimeStamp`;
+		let rest = await query(request, [userId]);
 		return (rest);
 	} catch (err){
 		console.log(err);
@@ -267,7 +267,6 @@ async function getUserNotifications(userId){
 		let request = `SELECT Id, Username, Avatar, Message, Viewed, "Profile" AS Type FROM ${config.NOTIFY_TABLE} INNER JOIN ${config.USERS_TABLE} \
 		ON  ${config.NOTIFY_TABLE}.FromId = ${config.USERS_TABLE}.Id WHERE ToId=? ORDER BY TimeStamp`;
 		let result = await query(request, [userId]);
-		console.log(result);
 		return(result);
 	} catch (err){
 		console.log(err);
