@@ -207,7 +207,7 @@ router.post('/login', async (req, res) => {
 		} else {
 			res.send(JSON.stringify({ data:
 				{
-					res: "Errors",
+					res: "Error",
 					errors: data
 				}
 			}));

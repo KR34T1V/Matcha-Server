@@ -701,7 +701,7 @@ async function getUserConnexions(accessToken){
 	let user = await verifyAccessToken(accessToken);
 	if (user != null && user.Id != null && user.LikedBy != null){
 		for (const e of JSON.parse(user.LikedBy)){
-			if (JSON.parse(user.Liked).includes(e)){
+			if (JSON.parse(user.Liked).includes(e) && !JSON.parse(user.BlockedUsers).includes(e)){
 				let res = await sql.getConnexion(e)
 				if (res != null)
 					payload.push(res[0]);
