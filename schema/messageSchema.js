@@ -31,14 +31,9 @@ async function sendChatMessage(accesstoken, to, msg){
 }
 
 //returns an array of chat messages or null
-async function readChat(accesstoken, withId){
-	if (accesstoken == null || withId == null)
-		return(null);
-	let user1 = await profile.verifyAccessToken(accesstoken);
-	if (user1 != null && user1.Id != null){
-		let result = await sql.readChatMessages(user1.Id, withId);
+async function readChat(id, withId){
+		let result = await sql.readChatMessages(id, withId);
 		return(result);
-	} else return (user1);
 }
 
 //returns and array of users or null

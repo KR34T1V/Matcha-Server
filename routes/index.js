@@ -44,9 +44,10 @@ router.get('/home', async (req, res) => {
 					//hide users with no avatar
 					payload = payload.filter(e=> e.Avatar != null);
 					//hide users that are blocked
-					if (user.Blocked != null && user.Blocked.length > 0)
+					user.BlockedUsers = user.BlockedUsers == null ? [] : JSON.parse(user.BlockedUsers);
+					if (user.BlockedUsers != null && user.BlockedUsers.length > 0)
 						payload = payload.filter((e) => {
-							return user.BlockedUsers.includes(e) ? null : e
+							return user.BlockedUsers.includes(e.Id) ? null : e
 						})
 				} else errors.push("Failed to get users");
 			} else errors.push("Invalid access token");
@@ -313,21 +314,32 @@ router.get('/user/chat', async (req, res) => {
 
 router.get('/user/notifications', async (req, res) => {
 	try{
-		let other = await notify.readNotifications(req.query.AccessToken);
-		let chats = await msg.checkNewChatMessages(req.query.AccessToken);
-		let notifications;
-		other != null ? notifications = other.concat(chats) : notifications = chats;
-		if (notifications != null){
-			res.send(JSON.stringify({data:{
-				res:"Success",
-				notifications
-			}}));
-		} else res.send(JSON.stringify({ data:
-			{
-				res: "Error",
-				errors: ["Oops we did not expect this to ever happen"]
-			}
-		}));
+		let user = await profile.verifyAccessToken(req.query.AccessToken);
+		if (user != null && user.Id != null){
+			let other = await notify.readNotifications(user.Id);
+			let chats = await msg.checkNewChatMessages(user.Id);
+			let notifications = []
+			if (other != null)
+				notifications = notifications.concat(other);
+			if (chats != null)
+				notifications = notifications.concat(chats);
+			user.BlockedUsers = user.BlockedUsers == null ? [] : JSON.parse(user.BlockedUsers);
+			notifications = notifications.filter((e)=>{
+				if (!user.BlockedUsers.includes(e.Id))
+					return(e);
+			})
+			if (notifications != null){
+				res.send(JSON.stringify({data:{
+					res:"Success",
+					notifications
+				}}));
+			} else res.send(JSON.stringify({ data:
+				{
+					res: "Error",
+					errors: ["Oops we did not expect this to ever happen"]
+				}
+			}));
+		}
 	} catch (err){
 		console.log(err);
 		res.send(JSON.stringify({ data:
@@ -590,14 +602,17 @@ router.get('/getProfileViews', async (req, res)=>{
 			if (ret != null && ret.Id != null){
 				let views = JSON.parse(ret.ViewedBy);
 				if (views != null && views.length > 0){
+					ret.BlockedUsers = ret.BlockedUsers == null ? [] : JSON.parse(ret.BlockedUsers);
 					await g.asyncForEach(views, async (val)=>{
-						let tmp_user = {};
-						tmp = await sql.findId(val);
-						if (tmp != null && tmp.Id != null){
-							tmp_user.Id = tmp.Id;
-							tmp_user.Username = tmp.Username;
-							tmp_user.Fame = await profile.calculateUserFame(tmp);
-							payload.push(tmp_user);
+						if (!ret.BlockedUsers.includes(val)){
+							let tmp_user = {};
+							tmp = await sql.findId(val);
+							if (tmp != null && tmp.Id != null && ret.BlockedUsers){
+								tmp_user.Id = tmp.Id;
+								tmp_user.Username = tmp.Username;
+								tmp_user.Fame = await profile.calculateUserFame(tmp);
+								payload.push(tmp_user);
+							}
 						}
 					});
 				}
@@ -636,7 +651,7 @@ router.get('/getProfileBlocked', async (req, res)=>{
 		let blocked = [];
 		let tmp;
 		if (user != null && user.Id != null){
-			let ids = (user.BlockedUsers == null ? [] : JSON.stringify(user.BlockedUsers));
+			let ids = (user.BlockedUsers == null ? [] : JSON.parse(user.BlockedUsers));
 			await g.asyncForEach(ids, async (val)=>{
 				let tmp_user = {};
 				tmp = await sql.findId(val);
@@ -675,8 +690,9 @@ router.get('/getProfileLikes', async (req, res)=>{
 			if (ret != null && ret.Id != null){
 				let likes = JSON.parse(ret.LikedBy);
 				if (likes != null && likes.length > 0){
+					ret.BlockedUsers = ret.BlockedUsers == null ? [] : JSON.parse(ret.BlockedUsers);
 					await g.asyncForEach(likes, async (val)=>{
-						if (ret.BlockedUsers != null && !ret.BlockedUsers.includes(val)){
+						if (!ret.BlockedUsers.includes(val)){
 							let tmp_user = {};
 							tmp = await sql.findId(val);
 							if (tmp != null && tmp.Id != null){
@@ -691,7 +707,7 @@ router.get('/getProfileLikes', async (req, res)=>{
 				res.send(JSON.stringify({data:
 					{
 						res: "Success",
-						Likers:payload
+						Likers: payload
 					}
 				}));
 			} else res.send(JSON.stringify({data:
@@ -868,7 +884,7 @@ router.post('/user/block', async (req, res) => {
 		let data;
 		let user = await profile.verifyAccessToken(userData.AccessToken);
 		if (user != null && user.Id != null && userData.profileId != null){
-			data = await profile.blockUser(user.Id, userData.profileId);
+			data = await profile.blockUser(user.Id, Number(userData.profileId));
 			if (data === 1){
 				res.send(JSON.stringify({data:{
 					res: "Success",
