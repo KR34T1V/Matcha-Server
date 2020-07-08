@@ -100,8 +100,12 @@ async function registerUser(user){
 //returns the user on success, array of errors on failure
 async function loginUser(user){
 	let errors = [];
+
+	var location = {"Latitude" : Number(user.Lat),
+					"Longitude" : Number(user.Long)};
+
 	try {
-		if (user == null || user.Email == null || user.Password == null)
+		if (user == null || user.Email == null || user.Password == null || user.Long == null || user.Lat == null)
 			return([config.MSG_FORM_INVALID]);
 		let data = await sql.findEmail(user.Email);
 		if (data == null && user.NewEmail != null)
@@ -113,6 +117,8 @@ async function loginUser(user){
 					let salt = await bcrypt.genSalt(1);
 					result = await newAccessToken(data.Id, salt);
 					if (result == 1){
+						console.log(data.Id);
+						console.log(sql.updateUser(data.Id, "Location=?", [ JSON.stringify(location) ]));
 						data.AccessToken = salt;
 						return (data);
 					}
