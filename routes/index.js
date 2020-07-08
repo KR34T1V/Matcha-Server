@@ -454,7 +454,7 @@ router.post('/user/updateProfile/avatar', upload.single('Avatar'), async (req, r
 	}
 })
 
-router.post('/user/updateProfile/gallery',upload.single('Image'), async (req, res) => {
+router.post('/user/updateProfile/gallery', upload.single('Image'), async (req, res) => {
 	try{
 		let user = await profile.verifyAccessToken(req.body.AccessToken);
 		if (user != null && user.Id != null){
@@ -630,6 +630,41 @@ router.get('/getProfileViews', async (req, res)=>{
 	}
 })
 
+router.get('/getProfileBlocked', async (req, res)=>{
+	try{
+		let user = await profile.verifyAccessToken(req.query.AccessToken);
+		let blocked = [];
+		let tmp;
+		if (user != null && user.Id != null){
+			let ids = (user.BlockedUsers == null ? [] : JSON.stringify(user.BlockedUsers));
+			await g.asyncForEach(ids, async (val)=>{
+				let tmp_user = {};
+				tmp = await sql.findId(val);
+				if (tmp != null && tmp.Id != null){
+					tmp_user.Id = tmp.Id;
+					tmp_user.Username = tmp.Username;
+					tmp_user.Fame = await profile.calculateUserFame(tmp);
+					blocked.push(tmp_user);
+				}
+			})
+		}
+		res.send(JSON.stringify({data:
+			{
+				res: "Success",
+				Blocked: blocked
+			}
+		}));
+	} catch (err){
+		console.log(err);
+		res.send(JSON.stringify({ data:
+			{
+			res: "Error",
+			errors: ["Oops pretend you did not see this"]
+			}
+		}));
+	}
+})
+
 router.get('/getProfileLikes', async (req, res)=>{
 	try{
 		let data = req.query;
@@ -641,13 +676,15 @@ router.get('/getProfileLikes', async (req, res)=>{
 				let likes = JSON.parse(ret.LikedBy);
 				if (likes != null && likes.length > 0){
 					await g.asyncForEach(likes, async (val)=>{
-						let tmp_user = {};
-						tmp = await sql.findId(val);
-						if (tmp != null && tmp.Id != null){
-							tmp_user.Id = tmp.Id;
-							tmp_user.Username = tmp.Username;
-							tmp_user.Fame = await profile.calculateUserFame(tmp);
-							payload.push(tmp_user);
+						if (ret.BlockedUsers != null && !ret.BlockedUsers.includes(val)){
+							let tmp_user = {};
+							tmp = await sql.findId(val);
+							if (tmp != null && tmp.Id != null){
+								tmp_user.Id = tmp.Id;
+								tmp_user.Username = tmp.Username;
+								tmp_user.Fame = await profile.calculateUserFame(tmp);
+								payload.push(tmp_user);
+							}
 						}
 					})
 				}
