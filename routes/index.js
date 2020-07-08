@@ -77,7 +77,7 @@ router.get('/home', async (req, res) => {
 			res.send(JSON.stringify({ data:
 				{ 
 					res: "Success",
-					people: finalPayload
+					People: finalPayload
 				}
 			}));
 		} else 
@@ -252,16 +252,18 @@ router.get('/user/profile', async (req, res) => {
 			res.send(JSON.stringify({data:
 				{
 					res: "Success",
-					Username: user.Username,
-					Firstname: user.Firstname,
-					Lastname: user.Lastname,
-					Email: user.Email,
-					Gender: user.Gender,
-					SexualPreference: user.SexualPreference,
-					Avatar: user.Avatar,
-					Images: JSON.parse(user.Images),
-					Interests: JSON.parse(user.Interests),
-					Biography: user.Biography
+					Profile: {
+						Username: user.Username,
+						Firstname: user.Firstname,
+						Lastname: user.Lastname,
+						Email: user.Email,
+						Gender: user.Gender,
+						SexualPreference: user.SexualPreference,
+						Avatar: user.Avatar,
+						Images: JSON.parse(user.Images),
+						Interests: JSON.parse(user.Interests),
+						Biography: user.Biography
+					}
 				}
 			}))
 		} else res.send(JSON.stringify({data:
@@ -537,21 +539,23 @@ router.get('/view/profile', async (req, res) => {
 				res.send(JSON.stringify({data:
 				{
 					res: "Success",
-					Username: result.Username,
-					Firstname: result.Firstname,
-					Lastname: result.Lastname,
-					Gender: result.Gender,
-					SexualPreference: result.SexualPreference,
-					Age: await profile.calculateUserAge(result),
-					Biography: result.Biography,
-					Interests: JSON.parse(result.Interests),
-					Location: JSON.parse(result.Location),
-					Fame: await profile.calculateUserFame(result),
-					Avatar: result.Avatar,
-					Images: JSON.parse(result.Images),
-					AccessTime: result.AccessTime,
-					Liked: result.LikedBy != null ? (result.LikedBy.includes(user.Id) ? true : false) : false,
-					Blocked: user.BlockedUsers != null ? (user.BlockedUsers.includes(result.Id) ? true : false) : false
+					user:{
+						Username: result.Username,
+						Firstname: result.Firstname,
+						Lastname: result.Lastname,
+						Gender: result.Gender,
+						SexualPreference: result.SexualPreference,
+						Age: await profile.calculateUserAge(result),
+						Biography: result. Biography,
+						Interests: JSON.parse(result.Interests),
+						Location: JSON.parse(result.Location),
+						Fame: await profile.calculateUserFame(result),
+						Avatar: result.Avatar,
+						Images: JSON.parse(result.Images),
+						AccessTime: result.AccessTime,
+						Liked: result.LikedBy != null ? (result.LikedBy.includes(user.Id) ? true : false) : false,
+						Blocked: user.BlockedUsers != null ? (user.BlockedUsers.includes(result.Id) ? true : false) : false
+					}
 				}}));
 			} else res.send(JSON.stringify({data:
 				{
