@@ -37,20 +37,22 @@ router.get('/home', async (req, res) => {
 		if (req.query.AccessToken != null){	
 			let user = await profile.verifyAccessToken(req.query.AccessToken);
 			if (user != null && user.Id != null){
-				let data = await sql.getAllActiveUsers();
-				if (data != null){
-					//match sexual preference
-					payload = await filter.preference(user, data);
-					//hide users with no avatar
-					payload = payload.filter(e=> e.Avatar != null);
-					//hide users that are blocked
-					user.BlockedUsers = user.BlockedUsers == null ? [] : JSON.parse(user.BlockedUsers);
-					if (user.BlockedUsers != null && user.BlockedUsers.length > 0)
-						payload = payload.filter((e) => {
-							return user.BlockedUsers.includes(e.Id) ? null : e
-						})
-				} else errors.push("Failed to get users");
-			} else errors.push("Invalid access token");
+				if (user.Avatar != null){
+					let data = await sql.getAllActiveUsers();
+					if (data != null){
+						//match sexual preference
+						payload = await filter.preference(user, data);
+						//hide users with no avatar
+						payload = payload.filter(e=> e.Avatar != null);
+						//hide users that are blocked
+						user.BlockedUsers = user.BlockedUsers == null ? [] : JSON.parse(user.BlockedUsers);
+						if (user.BlockedUsers != null && user.BlockedUsers.length > 0)
+							payload = payload.filter((e) => {
+								return user.BlockedUsers.includes(e.Id) ? null : e
+							})
+					} else errors.push("Failed to get users");
+				} else errors.push("Please complete your profile before searching other users");
+			} else errors = user;
 		} else errors.push("Access token missing");
 		//sort goes here
 		if (payload != null && errors.length == 0){
