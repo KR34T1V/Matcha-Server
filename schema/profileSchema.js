@@ -706,11 +706,13 @@ async function getUserConnexions(accessToken){
 	let payload = [];
 	let user = await verifyAccessToken(accessToken);
 	if (user != null && user.Id != null && user.LikedBy != null){
+		user.BlockedUsers = user.BlockedUsers === null ? [] : JSON.parse(user.BlockedUsers);
 		for (const e of JSON.parse(user.LikedBy)){
-			if (JSON.parse(user.Liked).includes(e) && !JSON.parse(user.BlockedUsers).includes(e)){
+			if (JSON.parse(user.Liked).includes(e) && !user.BlockedUsers.includes(e)){
 				let res = await sql.getConnexion(e)
-				if (res != null)
+				if (res != null && res.length > 0){
 					payload.push(res[0]);
+				}
 			}
 		}
 		return(payload)
