@@ -351,6 +351,12 @@ async function userUpdateProfile(user){
 				build.push('Biography=?');
 				form.push(bio);
 			}
+			if (user.Interests != null){
+				user.Interests.forEach((e)=>{
+					if (!config.INTEREST_FILTER.includes(e))
+						errors.push("Invalid Interest Tag ");
+				})
+			} else user.Interests = [];
 
 			//EMAIL
 			if (user.NewEmail != null && user.NewEmail != data.Email){
@@ -386,6 +392,8 @@ async function userUpdateProfile(user){
 			// 	}
 			// }
 			if (errors.length == 0){
+				build.push("Interests=?");
+				form.push(JSON.stringify(user.Interests));
 				request = await sql.buildQuery(build, ', ');
 				if (await sql.updateUser(data.Id, request, form))
 					return (null);
