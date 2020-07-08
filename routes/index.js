@@ -207,7 +207,7 @@ router.post('/login', async (req, res) => {
 		} else {
 			res.send(JSON.stringify({ data:
 				{
-					res: "Errors",
+					res: "Error",
 					errors: data
 				}
 			}));
@@ -528,6 +528,31 @@ router.post('/user/passwordChange', async (req, res) => {
 	}
 })
 
+router.post('/user/profile/delete', async (req, res)=>{
+	try{
+		let res = await profile.deleteUser(req.body.AccessToken, req.body.Password);
+		if (res != null){
+			res.send(JSON.stringify({ data: {
+				res: "Error",
+				errors: res
+			}}))
+		} else res.send(JSON.stringify({data:
+			{
+				res: 'Success',
+				msg: 'Profile deleted',
+			}
+		}))
+	} catch (err){
+		console.log(err);
+		res.send(JSON.stringify({ data:
+			{
+			res: "Error",
+			errors: ["Oops pretend you did not see this"]
+			}
+		}));
+	}
+})
+
 router.get('/view/profile', async (req, res) => {
 	try{
 		let AccessToken = req.query.AccessToken;
@@ -789,27 +814,23 @@ router.post('/user/passwordReset/email', async (req, res) => {
 	}
 })
 
-router.get('/user/delete', async (req, res) => {
+router.post('/user/delete', async (req, res) => {
 	try{
-		let userData = req.body;
-		let data;
-	
-		if (userData != null){
-			data = await profile.deleteUser(userData);
-			if (data == null)
-				res.send(JSON.stringify({ data:
-					{
-					res: "Success",
-					msg: "Account deleted"
-					}
-				}));
-			else 
-				res.send(JSON.stringify({ data:
-					{
-					res: "Error",
-					errors: data
-					}
-				}));
+		let result = await profile.deleteUser(req.body.AccessToken, req.body.Password);
+		if (result === 'Success'){
+			res.send(JSON.stringify({ data:
+				{
+				res: "Success",
+				msg: "Account deleted"
+				}
+			}));
+		} else {
+			res.send(JSON.stringify({ data:
+				{
+				res: "Error",
+				errors: result
+				}
+			}));
 		}
 	} catch (err){
 		console.log(err);

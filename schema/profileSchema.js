@@ -345,9 +345,7 @@ async function userUpdateProfile(user){
 				}
 			}
 			if (user.Biography != data.Biography){
-				console.log(user.Biography)
 				let bio =  await sql.stripHTML(user.Biography);
-				console.log(bio);
 				build.push('Biography=?');
 				form.push(bio);
 			}
@@ -427,18 +425,20 @@ async function userUpdateGallery(id, path, oldGallery, key){
 	}
 }
 //Returns null on success, array of errors on failure
-async function deleteUser(user){
-	let errors = [];
+async function deleteUser(accessToken, pwd){
 	try {
-		if ( user == null || user.Id == null || user.Password == null )
+		console.log("here");
+		let errors = [];
+		if (accessToken == null || pwd == null )
 			return([config.MSG_FORM_INVALID]);
-		let data = await sql.findId(user.Id);
-		if (data != null){
-			if (await bcrypt.compare(user.Password, data.Password)){
+		let user = await verifyAccessToken(accessToken);
+		if (user != null && user.Id != null){
+			if (await bcrypt.compare(pwd, user.Password)){
 				let request = `DateDeleted=?`
-				let res = await sql.updateUser(user.Id, request, new Date().toLocaleDateString());
+				let res = await sql.updateUser(user.Id, request, [new Date().toLocaleDateString()]);
 				if (res){
-					return (null);
+					destroyAccessToken(accessToken);
+					return ('Success');
 				} else {
 					errors.push('An Unexpected Error Occured Please Try Again Later...');
 				}
