@@ -58,6 +58,28 @@ const CLOUDINARY_CONNECTION = {
 	api_secret: 'upQlu1NcoKeXGluWQARX9qwL8mo'
 }
 const IMAGE_FILTER = /\.(jpg|jpeg|png|gif)$/; //not used
+const INTEREST_FILTER = [
+	'Dogs',
+	'Cats',
+	'DIY',
+	'Outdoor',
+	'Camping',
+	'Nature',
+	'Games',
+	'Movies',
+	'Series',
+	'Coding',
+	'Harambe',
+	'Study',
+	'Reading',
+	'Punk',
+	'Rock',
+	'Classical',
+	'Coffee',
+	'Tea',
+	'Yoga',
+	'420'
+];
 
 //SECURITY REQUIREMENTS
 const PASSWORD_LENGTH = 8;
@@ -82,5 +104,6 @@ module.exports = {
 	IMAGE_FILTER,
 	PASSWORD_LENGTH,
 	ACCESS_EXPIRY,
-	MSG_FORM_INVALID
+	MSG_FORM_INVALID,
+	INTEREST_FILTER
 }
