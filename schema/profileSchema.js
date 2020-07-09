@@ -174,13 +174,14 @@ async function verifyUserEmail(email, key){
 }
 
 async function resendVerifyEmail(email){
-	if (email != null && email.length > 0)
+	console.log(email);
+	if (email != null && email.length < 1)
 		return([config.MSG_FORM_INVALID]);
 	let user = await sql.findEmail(email);
 	if (user != null && user.Id != null){
 		if (user.DateVerified == null){
 			await mail.verifyEmail(email, user.Username, user.VerifyKey)
-			return (null);
+			return ('Success');
 		} else {
 			return (["Account already verified"]);
 		} 
