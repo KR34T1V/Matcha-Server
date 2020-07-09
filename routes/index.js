@@ -197,6 +197,7 @@ router.post('/user/verifyEmail/email', async (req, res) => {
 
 router.post('/login', async (req, res) => {
 	try{
+		console.log(req.body);
 		let data = await profile.loginUser(req.body)
 		if (data != null && data.Id != null){
 			res.send(JSON.stringify({data:
@@ -781,7 +782,12 @@ router.post('/user/passwordReset', async (req, res) => {
 				errors: result
 				}
 			}));
-		}
+		} else res.send(JSON.stringify({ data:
+			{
+			res: "Error",
+			errors: [config.MSG_FORM_INVALID]
+			}
+		}));
 	} catch (err){
 		console.log(err);
 		res.send(JSON.stringify({ data:
