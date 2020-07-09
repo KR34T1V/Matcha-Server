@@ -10,7 +10,7 @@ const config = require('../config');
 start();
 
 async function start(){
-	// await gen.generateUsers(25);
+	// await gen.generateUsers(500);
 	// likeAlot(50, 25);
 	// viewAlot(3, 25);
 	// console.log(await findIds([1,2,3,4,5,6]));
@@ -105,7 +105,7 @@ async function loginUser(user){
 					"Longitude" : Number(user.Long)};
 
 	try {
-		if (user == null || user.Email == null || user.Password == null || user.Long == null || user.Lat == null)
+		if (user == null || user.Email == null || user.Password == null)
 			return([config.MSG_FORM_INVALID]);
 		let data = await sql.findEmail(user.Email);
 		if (data == null && user.NewEmail != null)
