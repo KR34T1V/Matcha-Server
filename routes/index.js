@@ -35,7 +35,7 @@ router.get('/home', async (req, res) => {
 		let payload;
 		//filter goes here
 		if (req.query.AccessToken != null){	
-			let user = await profile.verifyAccessToken(req.query.AccessToken);
+			var user = await profile.verifyAccessToken(req.query.AccessToken);
 			if (user != null && user.Id != null){
 				if (user.Avatar != null){
 					let data = await sql.getAllActiveUsers();
@@ -55,14 +55,15 @@ router.get('/home', async (req, res) => {
 			} else errors = user;
 		} else errors.push("Access token missing");
 		//sort goes here
-		if (payload != null && errors.length == 0){
-		}
+
 		//age
 		//location
 		//fame
 		//iterest tags
 		//build response
 		if (payload != null && errors.length == 0){
+			let payloadUser = user;
+			console.log(payloadUser);
 			const finalPayload = await Promise.all(
 				payload.map(async val=>{
 					let user = {};
@@ -74,6 +75,7 @@ router.get('/home', async (req, res) => {
 					user.FameRating = await profile.calculateUserFame(val);
 					user.Age = await profile.calculateUserAge(val);
 					user.Biography = val.Biography;
+					user.Distance = await profile.calculateDistance(val.Location, payloadUser.Location);
 					return user;
 				})
 			)

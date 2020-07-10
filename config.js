@@ -3,7 +3,7 @@ SERVER_ADDRESS = `localhost:3030`
 
 //DATABASE CONSTANTS
 const MY_SQL_HOST ='localhost';
-const MY_SQL_USERNAME = 'kr34t1v';
+const MY_SQL_USERNAME = 'root';
 const MY_SQL_PASSWORD = 'Papenvleis1!';
 const DATABASE_NAME = 'matcha';
 const USERS_TABLE = `${DATABASE_NAME}.Users`;

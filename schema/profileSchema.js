@@ -702,6 +702,33 @@ async function calculateDateDifference(future, past){
 	return (d);
 }
 
+async function calculateDistance(to, from){
+	if (from !== null && to !== null && to.Latitude !== null &&
+		 to.Longitude !== null && from.Latitude !== null &&
+		  from.Longitude !== null) {
+		const lat1 = parseFloat(to.Latitude);
+		const lat2 = parseFloat(from.Latitude);
+		const lon1 = parseFloat(to.Longitude);
+		const lon2 = parseFloat(from.Longitude);
+
+		const R = 6371e3; // metres
+		const q = lat1 * Math.PI/180; // φ, λ in radians
+		const p = lat2 * Math.PI/180;
+		const s = (lat2-lat1) * Math.PI/180;
+		const t = (lon2-lon1) * Math.PI/180;
+
+		const a = Math.sin(s/2) * Math.sin(s/2) +
+				Math.cos(q) * Math.cos(p) *
+				Math.sin(t/2) * Math.sin(t/2);
+		const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+		const d = R * c; // in metres
+		return(d);
+	} else {
+		return("many ")
+	}
+}
+
 async function getUserConnexions(accessToken){
 	let payload = [];
 	let user = await verifyAccessToken(accessToken);
@@ -738,6 +765,7 @@ module.exports = {
 	calculateUserFame,
 	calculateUserAge,
 	calculateDateDifference,
+	calculateDistance,
 	userPasswordChange,
 	userUpdateAvatar,
 	userUpdateGallery,
