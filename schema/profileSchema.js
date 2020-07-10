@@ -247,7 +247,7 @@ async function resetUserPassword(email, password, repassword, key){
 			if (data != null){
 				password = hash;
 				console.log(`${email} changed password`);
-				return(null);
+				return('Success');
 			} else {
 				return(['An unexpected error occured please try again later...']);
 			}
@@ -290,7 +290,7 @@ async function userPasswordChange(token, oldPwd, newPwd, rePwd){
 	}
 }
 
-//returns null on success, array of errors on failure
+//returns 'Success' on success, array of errors on failure
 async function userUpdateProfile(user){
 	let errors = [];
 	let build = [];
@@ -363,7 +363,7 @@ async function userUpdateProfile(user){
 			} else user.Interests = [];
 
 			//EMAIL
-			if (user.NewEmail != null && user.NewEmail != data.Email){
+			if (user.NewEmail != null && user.NewEmail !== data.Email){
 				if (!verify.checkEmail(user.NewEmail))
 					errors.push('Invalid Email address');
 				else {
@@ -372,8 +372,9 @@ async function userUpdateProfile(user){
 					mail.verifyEmail(user.NewEmail, user.Username, user.VerifyKey);
 					//Unverify
 					//Set New Email
+					console.log(user.NewEmail);
 					build.push('NewEmail=?');
-					form.push(user.newEmail);
+					form.push(user.NewEmail);
 					build.push('DateVerified=?');
 					form.push(null);
 					build.push('VerifyKey=?');
@@ -400,7 +401,7 @@ async function userUpdateProfile(user){
 				form.push(JSON.stringify(user.Interests));
 				request = await sql.buildQuery(build, ', ');
 				if (await sql.updateUser(data.Id, request, form))
-					return (null);
+					return ('Success');
 				errors.push('An Unexpected Error Occured Please Try Again Later...');
 			}
 			return(errors);

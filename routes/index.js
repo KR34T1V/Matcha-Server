@@ -434,7 +434,7 @@ router.post('/user/updateProfile', async (req, res) => {
 	try {
 		let input = req.body;
 		let result = await profile.userUpdateProfile(input);
-		if (result === null){
+		if (result === 'Success'){
 			res.send(JSON.stringify({data:
 				{
 					res: 'Success',
@@ -789,7 +789,7 @@ router.post('/user/passwordReset', async (req, res) => {
 			let result = await profile.resetUserPassword(bod.Email, 
 				bod.Password, bod.RePassword, bod.VerifyKey);
 			//success
-			if (result == null)
+			if (result === 'Success')
 				res.send(JSON.stringify({ data:
 					{
 					res: "Success",
