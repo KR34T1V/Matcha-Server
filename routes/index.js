@@ -434,7 +434,6 @@ router.post('/user/locationUpdate', async (req, res) => {
 	try {
 		let input = req.body;
 		let result = await profile.locationUpdate(input.AccessToken, input.Lat, input.Long);
-		console.log(result);
 		if (result === 'Success'){
 			res.send(JSON.stringify({data:
 				{
