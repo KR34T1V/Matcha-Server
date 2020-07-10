@@ -294,13 +294,13 @@ async function locationUpdate(token, lat, long) {
 	var location = {"Latitude" : Number(lat),
 	"Longitude" : Number(long)};
 	
-	let errors = [];
 	if (token == null || lat == null || long == null)
 		return ([config.MSG_FORM_INVALID]);
 	
 	let user = await verifyAccessToken(token);
 	if (user != null && user.Id != null){
-		sql.updateUser(user.Id, "Location=?", [ JSON.stringify(location) ]);
+		await sql.updateUser(user.Id, "Location=?", [ JSON.stringify(location) ]);
+		return ('Success');
 	}
 }
 	

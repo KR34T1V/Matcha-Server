@@ -432,33 +432,33 @@ router.post('/user/chat/new', async (req, res) => {
 
 router.post('/user/locationUpdate', async (req, res) => {
 	try {
-	let input = req.body;
-	let result = await profile.locationUpdate(input.AccessToken, input.Lat, input.Long);
-	if (result === null){
-	res.send(JSON.stringify({data:
-	{
-	res: 'Success',
-	msg: 'Profile Saved'
-	}
-	}));
-	} else {
-	res.send(JSON.stringify({data:
-	{
-	res: "Error",
-	errors: result
-	}
-	}))
-	}
+		let input = req.body;
+		let result = await profile.locationUpdate(input.AccessToken, input.Lat, input.Long);
+		if (result === null){
+			res.send(JSON.stringify({data:
+				{
+					res: 'Success',
+					msg: 'Profile Saved'
+				}
+			}));
+		} else {
+			res.send(JSON.stringify({data:
+				{
+					res: "Error",
+					errors: result
+				}
+			}))
+		}
 	} catch (err){
-	console.log(err);
-	res.send(JSON.stringify({ data:
-	{
-	res: "Error",
-	errors: ["Oops pretend you did not see this"]
+		console.log(err);
+		res.send(JSON.stringify({ data:
+		{
+			res: "Error",
+			errors: ["Oops pretend you did not see this"]
+		}
+		}));
 	}
-	}));
-	}
-	});
+});
 
 router.post('/user/updateProfile', async (req, res) => {
 	try {
