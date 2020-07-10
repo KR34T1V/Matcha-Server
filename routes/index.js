@@ -9,6 +9,7 @@ const config = require('../config');
 const msg = require('../schema/messageSchema');
 const notify = require('../schema/notificationSchema');
 const multer = require("multer");
+const { verifyAccessToken } = require("../schema/profileSchema");
 const storage = multer.diskStorage({
 	destination: function (req, file, cb){
 		cb(null, `${__dirname}/../public/uploads/`);
@@ -169,13 +170,20 @@ router.post('/user/verifyEmail', async (req, res)=> {
 router.post('/user/verifyEmail/email', async (req, res) => {
 	try{
 		if (req.body != null && req.body.Email != null){
-			await profile.resendVerifyEmail(req.body.Email);
-			res.send(JSON.stringify({data:
+			let result = await profile.resendVerifyEmail(req.body.Email);
+			if (result == 'Success'){
+				res.send(JSON.stringify({data:
+					{
+					res: "Success",
+					msg: "Email sent"
+					}
+				}));
+			} else res.send(JSON.stringify({data:
 				{
-				res: "Success",
-				msg: "Email sent"
+					res: "Error",
+					errors: result
 				}
-			}));
+			}))
 		} else {
 			res.send(JSON.stringify({data:
 				{
@@ -197,7 +205,6 @@ router.post('/user/verifyEmail/email', async (req, res) => {
 
 router.post('/login', async (req, res) => {
 	try{
-		console.log(req.body);
 		let data = await profile.loginUser(req.body)
 		if (data != null && data.Id != null){
 			res.send(JSON.stringify({data:
@@ -290,16 +297,22 @@ router.get('/user/profile', async (req, res) => {
 router.get('/user/chat', async (req, res) => {
 	try{
 		if (req.query != null && req.query.AccessToken != null && req.query.Id != null){
-			let chat = await msg.readChat(req.query.AccessToken, req.query.Id);
-			let user = await sql.findId(req.query.Id);
-			res.send(JSON.stringify({data:
-				{
-					res:'Success',
-					msg: "Chat retrieved",
-					Username: user.Username,
-					Chat: chat
-				}
-			}))
+			let user1 = await verifyAccessToken(req.query.AccessToken);
+			let user2 = await sql.findId(req.query.Id);
+			if (user1 != null && user1.Id != null && user2 != null){
+				let chat = await msg.readChat(user1.Id, req.query.Id);
+				res.send(JSON.stringify({data:
+					{
+						res:'Success',
+						msg: "Chat retrieved",
+						Username: user2.Username,
+						Chat: chat
+					}
+				}))
+			} else res.send(JSON.stringify({data: {
+				res: 'Error',
+				errors: ["Invalid User Id"]
+			}}))
 		} else res.send(JSON.stringify({data: {
 			res: 'Error',
 			errors: [config.MSG_FORM_INVALID]
@@ -384,8 +397,10 @@ router.post('/user/chat/new', async (req, res) => {
 	try{
 		if (req.body != null && req.body.AccessToken != null && req.body.To != null 
 		&& req.body.Message != null){
+		let user = await profile.verifyAccessToken(req.body.AccessToken);
+		if (user != null && user.Id != null){
 			await msg.sendChatMessage(req.body.AccessToken, req.body.To, req.body.Message);
-			let chat = await msg.readChat(req.body.AccessToken, req.body.To);
+			let chat = await msg.readChat(user.Id, req.body.To);
 			res.send(JSON.stringify({data:
 				{
 					res: "Success",
@@ -395,9 +410,15 @@ router.post('/user/chat/new', async (req, res) => {
 		} else res.send(JSON.stringify({data:
 			{
 				res: "Error",
-				errors: [config.MSG_FORM_INVALID],
+				errors: user,
 			}
 		}));
+	} else res.send(JSON.stringify({data:
+		{
+			res: "Error",
+			errors: [config.MSG_FORM_INVALID],
+		}
+	}));
 	} catch (err){
 		console.log(err);
 		res.send(JSON.stringify({ data:

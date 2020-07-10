@@ -37,12 +37,9 @@ async function readChat(id, withId){
 }
 
 //returns and array of users or null
-async function checkNewChatMessages(accesstoken){
-	if (accesstoken == null)
-		return(null);
-	let user = await profile.verifyAccessToken(accesstoken);
-	if (user != null && user.Id != null){
-		let from = await sql.checkNewChatMessages(user.Id);
+async function checkNewChatMessages(Id){
+	if (Id != null){
+		let from = await sql.checkNewChatMessages(Id);
 		return (from);
 	} else return (null);
 }
