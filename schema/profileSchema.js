@@ -290,6 +290,20 @@ async function userPasswordChange(token, oldPwd, newPwd, rePwd){
 	}
 }
 
+async function locationUpdate(token, lat, long) {
+	var location = {"Latitude" : Number(lat),
+	"Longitude" : Number(long)};
+	
+	let errors = [];
+	if (token == null || lat == null || long == null)
+		return ([config.MSG_FORM_INVALID]);
+	
+	let user = await verifyAccessToken(token);
+	if (user != null && user.Id != null){
+		sql.updateUser(user.Id, "Location=?", [ JSON.stringify(location) ]);
+	}
+}
+	
 //returns 'Success' on success, array of errors on failure
 async function userUpdateProfile(user){
 	let errors = [];
@@ -742,5 +756,6 @@ module.exports = {
 	userPasswordChange,
 	userUpdateAvatar,
 	userUpdateGallery,
-	getUserConnexions
+	getUserConnexions,
+	locationUpdate
 }
