@@ -10,9 +10,9 @@ const config = require('../config');
 start();
 
 async function start(){
-	// await gen.generateUsers(500);
-	// likeAlot(50, 25);
-	// viewAlot(3, 25);
+	// await gen.generateUsers(25);
+	// likeAlot(50, 27);
+	// viewAlot(50, 27);
 	// console.log(await findIds([1,2,3,4,5,6]));
 	// console.log(await viewUser(1, 6));
 
@@ -174,7 +174,6 @@ async function verifyUserEmail(email, key){
 }
 
 async function resendVerifyEmail(email){
-	console.log(email);
 	if (email != null && email.length < 1)
 		return([config.MSG_FORM_INVALID]);
 	let user = await sql.findEmail(email);
